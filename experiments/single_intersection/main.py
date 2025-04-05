@@ -37,8 +37,6 @@ if __name__ == "__main__":
             sumoBinary,
             "-c",
             "experiments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
-            "--tripinfo-output",
-            "experiments/experiment1.xml",
             "--start",
         ]
     )
