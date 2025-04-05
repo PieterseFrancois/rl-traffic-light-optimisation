@@ -1,8 +1,13 @@
 import traci
 import random
-import modules.lane_metrics as lane_metrics
-import modules.plotting as plotting
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from modules import lane_metrics, plotting
 from modules.metrics_structs import SingleIntersectionMetrics
+
 
 def _setup_turning_and_straight_flow_NS(num_vehicles=50):
     """Vehicles from North with mixed movements: straight, left, right."""

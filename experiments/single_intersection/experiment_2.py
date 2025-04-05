@@ -1,7 +1,12 @@
 import traci
-import modules.lane_metrics as lane_metrics
-import modules.plotting as plotting
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from modules import lane_metrics, plotting
 from modules.metrics_structs import SingleIntersectionMetrics
+
 
 
 def _setup_single_direction_flow(num_vehicles=30):

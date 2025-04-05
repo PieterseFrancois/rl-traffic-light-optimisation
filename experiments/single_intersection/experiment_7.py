@@ -1,9 +1,12 @@
 import traci
 import random
-import modules.lane_metrics as lane_metrics
-import modules.plotting as plotting
-from modules.metrics_structs import SingleIntersectionMetrics
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from modules import lane_metrics, plotting
+from modules.metrics_structs import SingleIntersectionMetrics
 
 def _setup_random_arrivals(num_vehicles=60):
     """Vehicles depart randomly from all directions with jittered timing."""
