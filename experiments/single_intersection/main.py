@@ -36,19 +36,20 @@ if __name__ == "__main__":
         [
             sumoBinary,
             "-c",
-            "sumo-files/single-intersection-single-lane/single-intersection-single-lane.sumocfg",
+            "experiments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
             "--tripinfo-output",
             "experiments/experiment1.xml",
+            "--start",
         ]
     )
 
-    # experiment_1.run()
+    experiment_1.run()
     # experiment_2.run()
     # experiment_3.run()
     # experiment_4.run()
     # experiment_5.run()
-    experiment_6.run()
-    # experiment_7.run()
+    # experiment_6.run()
+    # experiment_7.run() 
     # experiment_8.run()
     # experiment_9.run()
     # experiment_10.run()
