@@ -27,6 +27,7 @@ def get_options():
 
 import experiment_1, experiment_2, experiment_3, experiment_4, experiment_5
 import experiment_6, experiment_7, experiment_8, experiment_9, experiment_10
+import ppo_adaptive_baseline, ppo_baseline
 
 # Main entry point
 if __name__ == "__main__":
@@ -41,7 +42,9 @@ if __name__ == "__main__":
         ]
     )
 
-    experiment_1.run()
+    ppo_baseline.run()
+    # ppo_adaptive_baseline.run()
+    # experiment_1.run()
     # experiment_2.run()
     # experiment_3.run()
     # experiment_4.run()
