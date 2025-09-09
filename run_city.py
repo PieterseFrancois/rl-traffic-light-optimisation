@@ -13,10 +13,10 @@ import traci
 from utils.sumo_helpers import start_sumo, close_sumo                                      # sumo start/stop
 
 from environments.ingolstadt.intersections.builder import build_envs_from_yaml                    # your builder
-from modules.communication_bus import CommunicationBus
-from modules.intersection.env_adapter import IntersectionEnv
-from modules.intersection.state import build_matrices
-from modules.intersection.policy import SB3PolicyModule
+from proto_modules.communication_bus import CommunicationBus
+from proto_modules.intersection.env_adapter import IntersectionEnv
+from proto_modules.intersection.state import build_matrices
+from proto_modules.intersection.policy import SB3PolicyModule
 
 
 # --------------------- uplift utils ---------------------
