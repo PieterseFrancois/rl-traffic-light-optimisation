@@ -2,6 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "State: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_state.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+    },
+    {
+      "name": "Action: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_action.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+    }
+    {
       "name": "run_city (train)",
       "type": "debugpy",
       "request": "launch",
