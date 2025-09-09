@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "run_city (train)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_city.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      // "args": [
+      //   "--sumocfg", "environments/ingolstadt/sumo_files/ingolstadt21.sumocfg",
+      //   "--yaml", "environments/ingolstadt/intersections/nodes.yaml",
+      //   "--nodes", "N1", "N2", "N10",
+      //   "--mode", "train",
+      //   "--ticks-per-decision", "5",
+      //   "--timesteps", "10000",
+      //   "--out", "runs/exp_debug",
+      //   "--progress"
+      // ]
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--yaml", "environments/single_intersection/intersections/nodes.yaml",
+        "--nodes", "J",
+        "--mode", "train",
+        "--ticks-per-decision", "5",
+        "--seconds", "10000",
+        "--out", "runs/exp_debug",
+        "--progress"
+      ]
+    },
+    {
+      "name": "run_city (eval, GUI)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_city.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      // "args": [
+      //   "--sumocfg", "environments/ingolstadt/sumo_files/ingolstadt21.sumocfg",
+      //   "--yaml", "environments/ingolstadt/intersections/nodes.yaml",
+      //   "--nodes", "N1", "N2", "N10",
+      //   "--mode", "eval",
+      //   "--ticks-per-decision", "5",
+      //   "--seconds", "1800",
+      //   "--out", "runs/exp_debug"
+      // ]
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--yaml", "environments/single_intersection/intersections/nodes.yaml",
+        "--nodes", "J",
+        "--mode", "eval",
+        "--ticks-per-decision", "1",
+        "--seconds", "10000",
+        "--out", "runs/exp_debug"
+      ]
+    }
+  ]
+}
