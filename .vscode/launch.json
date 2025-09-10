@@ -18,7 +18,24 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": { "PYTHONPATH": "${workspaceFolder}" },
-    }
+    },
+    {
+      "name": "State-Action: Adaptive Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_state_action_adaptive_control.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--tls-id", "tlJ",
+        "--seconds", "600",
+        "--fixed-green-s", "10",
+        "--seed", "42",
+        "--plot"
+      ],
+    },
     {
       "name": "run_city (train)",
       "type": "debugpy",
