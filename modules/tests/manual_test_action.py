@@ -1,4 +1,3 @@
-
 import os
 import sys
 import optparse
@@ -54,7 +53,9 @@ if __name__ == "__main__":
     # custom_action_module.set_phase_immediately(2)  # Set to third custom green phase
     # traci.simulationStep()
 
-    timing = TLSTimingStandards(min_green_s=5.0, yellow_s=3.0, all_red_s=2.0, max_green_s=12.0)
+    timing = TLSTimingStandards(
+        min_green_s=5.0, yellow_s=3.0, all_red_s=2.0, max_green_s=12.0
+    )
     am = ActionModule(traci_connection=traci, tls_id="tlJ", timing_standards=timing)
 
     assert am.n_actions >= 2, f"Need >=2 green phases; got {am.n_actions}"
@@ -70,8 +71,10 @@ if __name__ == "__main__":
         t = float(traci.simulation.getTime())
         st = traci.trafficlight.getRedYellowGreenState(am.tls_id)
         cur = am.active_phase_memory.phase_index if am.active_phase_memory else None
-        print(f"[{t:7.1f}] {tag:<20} cur={cur} state={st} in_trans={am.in_transition} "
-            f"ready={am.ready_for_decision()}")
+        print(
+            f"[{t:7.1f}] {tag:<20} cur={cur} state={st} in_trans={am.in_transition} "
+            f"ready={am.ready_for_decision()}"
+        )
 
     # 1) Set to phase 0 (immediate)
     am.set_phase(i0)
@@ -89,7 +92,7 @@ if __name__ == "__main__":
     # 3) Min-green block: immediate request back to 0 should be ignored until 5s elapsed
     am.set_phase(i0)  # ignored due to min_green
     dump("req 0 (min-green)")
-    advance(5.2)      # satisfy min_green
+    advance(5.2)  # satisfy min_green
     am.set_phase(i0)  # now accepted
     dump("req 0 (accepted)")
     advance(timing.yellow_s + timing.all_red_s + 0.3)
@@ -97,9 +100,10 @@ if __name__ == "__main__":
 
     # 4) Max-green mask: wait beyond max, then current phase should be masked out
     advance(timing.max_green_s + 0.2)
-    print("mask (max-green overrun):", am.get_action_mask())  # expect current index False
+    print(
+        "mask (max-green overrun):", am.get_action_mask()
+    )  # expect current index False
     dump("post max-green")
-
 
     traci.close()
     sys.stdout.flush()

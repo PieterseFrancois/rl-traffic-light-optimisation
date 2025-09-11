@@ -8,6 +8,7 @@ from pathlib import Path
 import csv
 import numpy as np
 
+
 # ---------- SUMO tooling bootstrap ----------
 def _ensure_sumo_tools_in_path():
     if "SUMO_HOME" in os.environ:
@@ -15,42 +16,70 @@ def _ensure_sumo_tools_in_path():
         if tools not in sys.path:
             sys.path.append(tools)
     else:
-        sys.exit('Please set environment variable "SUMO_HOME" to your SUMO installation path.')
+        sys.exit(
+            'Please set environment variable "SUMO_HOME" to your SUMO installation path.'
+        )
+
 
 _ensure_sumo_tools_in_path()
-from sumolib import checkBinary    # noqa: E402
-import traci                       # noqa: E402
+from sumolib import checkBinary  # noqa: E402
+import traci  # noqa: E402
 from modules.intersection.action import ActionModule, TLSTimingStandards
 from modules.intersection.state import StateModule
-
 
 
 # ---------- CLI options ----------
 def get_options():
     opt_parser = optparse.OptionParser()
-    opt_parser.add_option("--nogui", action="store_true", default=False,
-                          help="Run headless SUMO (no GUI)")
-    opt_parser.add_option("--sumocfg", type="string",
-                          default="environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
-                          help="Path to .sumocfg")
-    opt_parser.add_option("--tls-id", type="string", default="tlJ", help="Traffic light ID")
-    opt_parser.add_option("--seconds", type="float", default=600.0, help="Sim length per run [s]")
-    opt_parser.add_option("--fixed-green-s", type="float", default=10.0,
-                          help="Fixed green per phase for the baseline [s]")
-    opt_parser.add_option("--out-dir", type="string", default=".state_action_adaptive_control_logs",
-                          help="Output dir for CSV logs")
+    opt_parser.add_option(
+        "--nogui", action="store_true", default=False, help="Run headless SUMO (no GUI)"
+    )
+    opt_parser.add_option(
+        "--sumocfg",
+        type="string",
+        default="environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        help="Path to .sumocfg",
+    )
+    opt_parser.add_option(
+        "--tls-id", type="string", default="tlJ", help="Traffic light ID"
+    )
+    opt_parser.add_option(
+        "--seconds", type="float", default=600.0, help="Sim length per run [s]"
+    )
+    opt_parser.add_option(
+        "--fixed-green-s",
+        type="float",
+        default=10.0,
+        help="Fixed green per phase for the baseline [s]",
+    )
+    opt_parser.add_option(
+        "--out-dir",
+        type="string",
+        default=".state_action_adaptive_control_logs",
+        help="Output dir for CSV logs",
+    )
     opt_parser.add_option("--seed", type="int", default=None, help="SUMO random seed")
-    opt_parser.add_option("--plot", action="store_true", default=False, help="Show comparison plots")
+    opt_parser.add_option(
+        "--plot", action="store_true", default=False, help="Show comparison plots"
+    )
 
     # Timing standards for ActionModule
-    opt_parser.add_option("--min-green", type="float", default=10.0, help="Min green [s]")
+    opt_parser.add_option(
+        "--min-green", type="float", default=10.0, help="Min green [s]"
+    )
     opt_parser.add_option("--yellow", type="float", default=3.0, help="Yellow [s]")
     opt_parser.add_option("--all-red", type="float", default=2.0, help="All-red [s]")
-    opt_parser.add_option("--max-green", type="float", default=30.0, help="Max green [s] (0 disables)")
+    opt_parser.add_option(
+        "--max-green", type="float", default=30.0, help="Max green [s] (0 disables)"
+    )
 
     # StateModule sensing
-    opt_parser.add_option("--max-det-range", type="float", default=50.0,
-                          help="Max detection range to TLS [m]")
+    opt_parser.add_option(
+        "--max-det-range",
+        type="float",
+        default=50.0,
+        help="Max detection range to TLS [m]",
+    )
 
     options, _ = opt_parser.parse_args()
     return options
@@ -62,12 +91,14 @@ def start_sumo(sumocfg: str, gui: bool, seed: int | None):
     sumo_binary = checkBinary(bin_name)
     cmd = [
         sumo_binary,
-        "-c", sumocfg,
+        "-c",
+        sumocfg,
         "--start",
     ]
     if seed is not None:
         cmd += ["--seed", str(seed)]
     traci.start(cmd)
+
 
 def close_sumo():
     try:
@@ -79,12 +110,15 @@ def close_sumo():
 # ---------- Helpers for rule-based scoring ----------
 _GREEN_CHARS = {"G", "g"}
 
+
 def phase_to_inbound_lanes(am: ActionModule) -> dict[int, list[str]]:
     """
     Build phase_index -> inbound lane_ids mapping using SUMO's controlled links.
     The i-th char in the TLS state corresponds to the i-th link group returned by getControlledLinks.
     """
-    links = traci.trafficlight.getControlledLinks(am.tls_id)  # list[list[(inLane, outLane, via)]]
+    links = traci.trafficlight.getControlledLinks(
+        am.tls_id
+    )  # list[list[(inLane, outLane, via)]]
     mapping: dict[int, list[str]] = {}
     for idx, pstr in am.green_phase_map.items():
         open_inbounds = []
@@ -104,10 +138,16 @@ def phase_to_inbound_lanes(am: ActionModule) -> dict[int, list[str]]:
         mapping[idx] = ordered
     return mapping
 
-def score_phase_by_queue(phase_to_lanes: dict[int, list[str]], lane_measures) -> dict[int, int]:
+
+def score_phase_by_queue(
+    phase_to_lanes: dict[int, list[str]], lane_measures
+) -> dict[int, int]:
     q_by_lane = {lm.lane_id: lm.queue for lm in lane_measures}
-    return {idx: int(sum(q_by_lane.get(lid, 0) for lid in lanes))
-            for idx, lanes in phase_to_lanes.items()}
+    return {
+        idx: int(sum(q_by_lane.get(lid, 0) for lid in lanes))
+        for idx, lanes in phase_to_lanes.items()
+    }
+
 
 def argmax_tiebreak(scores: dict[int, int], prefer_keep: int | None):
     """
@@ -147,6 +187,7 @@ def adaptive_step(am: ActionModule, sm: StateModule):
 
 def make_baseline(fixed_green_s: float = 10.0):
     last_switch_time = None
+
     def step(am: ActionModule, sm: StateModule):
         nonlocal last_switch_time
         lanes = sm.read_state()
@@ -169,18 +210,23 @@ def make_baseline(fixed_green_s: float = 10.0):
 
         am.update_transition()
         return total_queue, total_wait
+
     return step
 
 
 # ---------- Runner and plotting ----------
-def run_controller(tls_id: str,
-                   timing: TLSTimingStandards,
-                   max_det_range_m: float,
-                   controller_step,
-                   seconds: float,
-                   log_csv_path: Path):
+def run_controller(
+    tls_id: str,
+    timing: TLSTimingStandards,
+    max_det_range_m: float,
+    controller_step,
+    seconds: float,
+    log_csv_path: Path,
+):
     am = ActionModule(traci_connection=traci, tls_id=tls_id, timing_standards=timing)
-    sm = StateModule(traci_connection=traci, tls_id=tls_id, max_detection_range_m=max_det_range_m)
+    sm = StateModule(
+        traci_connection=traci, tls_id=tls_id, max_detection_range_m=max_det_range_m
+    )
 
     # Deterministic warm start
     am.set_phase(0)
@@ -190,7 +236,10 @@ def run_controller(tls_id: str,
         writer.writerow(["t", "total_queue", "total_wait_s"])
         t0 = float(traci.simulation.getTime())
         end_t = t0 + seconds
-        while float(traci.simulation.getTime()) < end_t and traci.simulation.getMinExpectedNumber() >= 0:
+        while (
+            float(traci.simulation.getTime()) < end_t
+            and traci.simulation.getMinExpectedNumber() >= 0
+        ):
             q, wsum = controller_step(am, sm)
             t_now = float(traci.simulation.getTime())
             writer.writerow([t_now, q, wsum])
@@ -240,8 +289,8 @@ def plot_compare(baseline_csv: Path, adaptive_csv: Path):
     means_w = [wb.mean() if wb.size else 0.0, wa.mean() if wa.size else 0.0]
     x = np.arange(2)
     width = 0.4
-    plt.bar(x - width/2, means_q, width, label="mean queue")
-    plt.bar(x + width/2, means_w, width, label="mean wait")
+    plt.bar(x - width / 2, means_q, width, label="mean queue")
+    plt.bar(x + width / 2, means_w, width, label="mean wait")
     plt.xticks(x, ["baseline", "adaptive"])
     plt.ylabel("value")
     plt.title("Mean KPIs")
@@ -251,15 +300,17 @@ def plot_compare(baseline_csv: Path, adaptive_csv: Path):
     plt.show()
 
 
-def run_two(sumocfg: str,
-            tls_id: str,
-            seconds: float,
-            fixed_green_s: float,
-            out_dir: Path,
-            seed: int | None,
-            gui: bool,
-            timing: TLSTimingStandards,
-            max_det_range_m: float):
+def run_two(
+    sumocfg: str,
+    tls_id: str,
+    seconds: float,
+    fixed_green_s: float,
+    out_dir: Path,
+    seed: int | None,
+    gui: bool,
+    timing: TLSTimingStandards,
+    max_det_range_m: float,
+):
     out_dir.mkdir(parents=True, exist_ok=True)
     baseline_csv = out_dir / "baseline.csv"
     adaptive_csv = out_dir / "adaptive.csv"
@@ -268,16 +319,28 @@ def run_two(sumocfg: str,
     start_sumo(sumocfg, gui=gui, seed=seed)
     try:
         baseline_step = make_baseline(fixed_green_s=fixed_green_s)
-        run_controller(tls_id=tls_id, timing=timing, max_det_range_m=max_det_range_m,
-                       controller_step=baseline_step, seconds=seconds, log_csv_path=baseline_csv)
+        run_controller(
+            tls_id=tls_id,
+            timing=timing,
+            max_det_range_m=max_det_range_m,
+            controller_step=baseline_step,
+            seconds=seconds,
+            log_csv_path=baseline_csv,
+        )
     finally:
         close_sumo()
 
     # Adaptive run (restart SUMO with same seed for comparable traffic)
     start_sumo(sumocfg, gui=gui, seed=seed)
     try:
-        run_controller(tls_id=tls_id, timing=timing, max_det_range_m=max_det_range_m,
-                       controller_step=adaptive_step, seconds=seconds, log_csv_path=adaptive_csv)
+        run_controller(
+            tls_id=tls_id,
+            timing=timing,
+            max_det_range_m=max_det_range_m,
+            controller_step=adaptive_step,
+            seconds=seconds,
+            log_csv_path=adaptive_csv,
+        )
     finally:
         close_sumo()
 
