@@ -44,6 +44,15 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": { "PYTHONPATH": "${workspaceFolder}" },
+    },
+    {
+      "name": "Preprocessor: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_preprocessor.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
     }
   ]
 }
