@@ -15,6 +15,7 @@ class RewardNormalisationParameters:
         max_detection_range_m (float): Maximum detection range for vehicles (in meters).
         avg_vehicle_length_m (float): Average vehicle length (in meters).
     """
+
     max_detection_range_m: float
     avg_vehicle_length_m: float
 
@@ -33,6 +34,7 @@ class RewardFunction(Enum):
     - QUEUE: Negative of the total queue length across all lanes.
     - TOTAL_WAIT: Negative of the total waiting time across all lanes.
     """
+
     QUEUE = "queue"
     TOTAL_WAIT = "total_wait"
 
@@ -54,7 +56,9 @@ class RewardModule:
             self.normalisation_params = None
         else:
             self.normalise_rewards: bool = True
-            self.normalisation_params: RewardNormalisationParameters = normalisation_params
+            self.normalisation_params: RewardNormalisationParameters = (
+                normalisation_params
+            )
 
         self._active_reward_function: Callable | None = None
         self._reward_fns: dict[RewardFunction, Callable] = {
@@ -186,4 +190,3 @@ class RewardModule:
         )
 
         return clipped_wait
-

@@ -6,7 +6,11 @@ from sumolib import checkBinary
 import traci
 
 from modules.intersection.state import StateModule
-from modules.intersection.reward import RewardModule, RewardFunction, RewardNormalisationParameters
+from modules.intersection.reward import (
+    RewardModule,
+    RewardFunction,
+    RewardNormalisationParameters,
+)
 
 # Import python modules from the $SUMO_HOME/tools directory
 if "SUMO_HOME" in os.environ:
