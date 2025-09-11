@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from action import ActionModule, TLSTimingStandards
 from state import StateModule
-from reward import RewardModule, NormalisationParameters, RewardFunction
+from reward import RewardModule, RewardNormalisationParameters, RewardFunction
 
 @dataclass
 class IntersectionConfig:
@@ -73,7 +73,7 @@ class IntersectionModule:
         self.action_module = ActionModule(**action_module_args)
 
     def _init_reward_module(self, config: IntersectionConfig) -> None:
-        normalisation_params = NormalisationParameters(
+        normalisation_params = RewardNormalisationParameters(
             max_detection_range_m=config.max_detection_range_m,
             avg_vehicle_length_m=config.average_vehicle_length_m + config.min_gap_between_vehicles_m,
         ) if config.normalise_rewards else None

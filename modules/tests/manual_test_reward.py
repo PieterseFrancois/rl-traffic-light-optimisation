@@ -6,7 +6,7 @@ from sumolib import checkBinary
 import traci
 
 from modules.intersection.state import StateModule
-from modules.intersection.reward import RewardModule, RewardFunction, NormalisationParameters
+from modules.intersection.reward import RewardModule, RewardFunction, RewardNormalisationParameters
 
 # Import python modules from the $SUMO_HOME/tools directory
 if "SUMO_HOME" in os.environ:
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     reward_module = RewardModule(
         traci_connection=traci,
         tls_id="tlJ",
-        normalisation_params=NormalisationParameters(
+        normalisation_params=RewardNormalisationParameters(
             max_detection_range_m=50.0,
             avg_vehicle_length_m=4.5,
         ),

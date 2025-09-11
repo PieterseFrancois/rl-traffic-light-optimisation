@@ -7,7 +7,7 @@ from .state import LaneMeasures
 
 
 @dataclass
-class NormalisationParameters:
+class RewardNormalisationParameters:
     """
     Normalisation parameters for reward functions.
 
@@ -43,7 +43,7 @@ class RewardModule:
         self,
         traci_connection,
         tls_id: str,
-        normalisation_params: NormalisationParameters | None = None,
+        normalisation_params: RewardNormalisationParameters | None = None,
     ):
 
         self.traci_connection = traci_connection
@@ -54,7 +54,7 @@ class RewardModule:
             self.normalisation_params = None
         else:
             self.normalise_rewards: bool = True
-            self.normalisation_params: NormalisationParameters = normalisation_params
+            self.normalisation_params: RewardNormalisationParameters = normalisation_params
 
         self._active_reward_function: Callable | None = None
         self._reward_fns: dict[RewardFunction, Callable] = {
@@ -69,7 +69,7 @@ class RewardModule:
 
         self._last_compute_time = float(self.traci_connection.simulation.getTime())
 
-    def set_normalise(self, normalisation_params: NormalisationParameters | None):
+    def set_normalise(self, normalisation_params: RewardNormalisationParameters | None):
         """Set whether to normalise rewards. If normalisation_params is None, disable normalisation."""
         if normalisation_params is None:
             self.normalise_rewards = False
