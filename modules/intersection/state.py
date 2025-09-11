@@ -4,6 +4,16 @@ from dataclasses import dataclass, field
 
 @dataclass
 class VehicleRecord:
+    """
+    State observations for a single vehicle.
+
+    Attributes:
+        vehicle_id (str): Vehicle identifier.
+        type_id (str): Vehicle type identifier.
+        wait_time_s (float): Time spent waiting at the traffic light (in seconds).
+        speed (float): Current speed of the vehicle (in meters per second).
+    """
+
     vehicle_id: str
     type_id: str
     wait_time_s: float = 0.0
@@ -12,6 +22,20 @@ class VehicleRecord:
 
 @dataclass
 class LaneMeasures:
+    """
+    State observations for a single lane.
+
+    Attributes:
+        lane_id (str): Lane identifier.
+        queue (int): Number of vehicles with wait > 0.
+        approach (int): Number of vehicles within detection distance and wait == 0.
+        total_wait_s (float): Sum of waits on this lane (in seconds).
+        max_wait_s (float): Maximum wait on this lane (in seconds).
+        total_speed (float): Sum of speeds on this lane.
+        vehicles (list[VehicleRecord]): List of per-vehicle records.
+        outbound_lanes (list[str] | None): List of outbound lanes connected to this lane (if any).
+    """
+
     lane_id: str  # lane identifier
     queue: int = 0  # vehicles with wait > 0
     approach: int = 0  # vehicles within detection distyance and wait == 0

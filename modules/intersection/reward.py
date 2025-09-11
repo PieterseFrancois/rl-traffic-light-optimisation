@@ -8,6 +8,13 @@ from .state import LaneMeasures
 
 @dataclass
 class NormalisationParameters:
+    """
+    Normalisation parameters for reward functions.
+
+    Attributes:
+        max_detection_range_m (float): Maximum detection range for vehicles (in meters).
+        avg_vehicle_length_m (float): Average vehicle length (in meters).
+    """
     max_detection_range_m: float
     avg_vehicle_length_m: float
 
