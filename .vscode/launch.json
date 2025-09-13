@@ -53,6 +53,32 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": { "PYTHONPATH": "${workspaceFolder}" },
+    },
+    {
+      "name": "PPO Surrounding Modules: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_state_action_reward_preprocessor_rl_testcase.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--tls-id", "tlJ",
+        "--nogui",
+        "--seed", "42",
+        "--episode-seconds", "4000",
+        "--ticks-per-decision", "1",
+        "--train-steps", "100000",
+        "--baseline-green-s", "20",
+        "--reward", "wait",
+        "--norm-state",
+        "--norm-reward",
+        "--outdir", ".surrounding_modules_test_runs/ppo_test",
+        "--tensorboard", 
+        "--logdir", ".surrounding_modules_test_runs/ppo_test/tb",
+        "--tensorboard-port", "6006"
+      ]
     }
   ]
 }
