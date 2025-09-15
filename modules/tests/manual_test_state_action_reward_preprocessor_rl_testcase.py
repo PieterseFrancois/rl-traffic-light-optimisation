@@ -38,7 +38,12 @@ from modules.intersection.preprocessor import (
     PreprocessorConfig,
     PreprocessorNormalisationParameters,
 )
-from modules.intersection.reward import RewardModule, RewardNormalisationParameters as RewardNormParams, RewardFunction
+from modules.intersection.reward import (
+    RewardModule,
+    RewardNormalisationParameters as RewardNormParams,
+    RewardFunction,
+)
+
 
 # ============================================================
 #                        Utilities
@@ -46,7 +51,8 @@ from modules.intersection.reward import RewardModule, RewardNormalisationParamet
 def start_sumo(sumocfg: str, *, nogui: bool, seed: Optional[int]) -> None:
     args = [
         checkBinary("sumo" if nogui else "sumo-gui"),
-        "-c", sumocfg,
+        "-c",
+        sumocfg,
         "--start",
         "--no-warnings",
     ]
@@ -92,7 +98,7 @@ class SingleTLSEnv(gym.Env):
         seed: Optional[int] = 42,
         episode_seconds: float = 300.0,
         ticks_per_decision: int = 1,
-        reward_name: str = "queue",           # "queue" or "total_wait"
+        reward_name: str = "queue",  # "queue" or "total_wait"
         normalise_reward: bool = True,
         normalise_state: bool = True,
         max_detection_range_m: float = 50.0,
@@ -110,7 +116,11 @@ class SingleTLSEnv(gym.Env):
         self.seed_val = seed
         self.episode_seconds = float(episode_seconds)
         self.ticks_per_decision = int(max(1, ticks_per_decision))
-        self.reward_name = RewardFunction.QUEUE if reward_name == "queue" else RewardFunction.TOTAL_WAIT
+        self.reward_name = (
+            RewardFunction.QUEUE
+            if reward_name == "queue"
+            else RewardFunction.TOTAL_WAIT
+        )
 
         self._sumo_running = False
         self._t0 = 0.0
@@ -147,30 +157,54 @@ class SingleTLSEnv(gym.Env):
         obs_shape, n_actions = self._probe_spaces()
 
         self.action_space = spaces.Discrete(n_actions)
-        self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=obs_shape, dtype=np.float32)
+        self.observation_space = spaces.Box(
+            low=-1.0, high=1.0, shape=obs_shape, dtype=np.float32
+        )
 
     def _probe_spaces(self) -> tuple[tuple[int, ...], int]:
         """Start SUMO briefly to discover obs shape and number of actions, then close."""
         start_sumo(self.sumocfg, nogui=True, seed=self.seed_val)
         try:
             # Build the same modules you use later
-            sm = StateModule(traci, self.tls_id,
-                             max_detection_range_m=(self._state_norm_params.max_detection_range_m
-                                                    if self._state_norm_params else 50.0))
-            am = ActionModule(traci, self.tls_id,
-                              timing_standards=(self._timing if self._timing else TLSTimingStandards()))
+            sm = StateModule(
+                traci,
+                self.tls_id,
+                max_detection_range_m=(
+                    self._state_norm_params.max_detection_range_m
+                    if self._state_norm_params
+                    else 50.0
+                ),
+            )
+            am = ActionModule(
+                traci,
+                self.tls_id,
+                timing_standards=(
+                    self._timing if self._timing else TLSTimingStandards()
+                ),
+            )
             pm = PreprocessorModule(
-                traci, self.tls_id,
+                traci,
+                self.tls_id,
                 config=PreprocessorConfig(
-                    include_queue=True, include_approach=True,
-                    include_total_wait=True, include_max_wait=True, include_total_speed=True),
+                    include_queue=True,
+                    include_approach=True,
+                    include_total_wait=True,
+                    include_max_wait=True,
+                    include_total_speed=True,
+                ),
                 normalisation_params=self._state_norm_params,
             )
             # deterministic warm start & tick once
             am.set_phase_immediately(0)
             traci.simulationStep()
 
-            sample = pm.get_state_tensor(sm.read_state()).flatten().cpu().numpy().astype(np.float32)  # noqa: E501
+            sample = (
+                pm.get_state_tensor(sm.read_state())
+                .flatten()
+                .cpu()
+                .numpy()
+                .astype(np.float32)
+            )  # noqa: E501
             obs_shape = sample.shape  # e.g., (20,)
             n_actions = am.n_actions
             return obs_shape, n_actions
@@ -191,32 +225,43 @@ class SingleTLSEnv(gym.Env):
     # ---- Build modules once SUMO is live ----
     def _lazy_init(self):
         self.state_module = StateModule(
-            traci_connection=traci, tls_id=self.tls_id,
-            max_detection_range_m=self._state_norm_params.max_detection_range_m if self._state_norm_params else 50.0,
+            traci_connection=traci,
+            tls_id=self.tls_id,
+            max_detection_range_m=(
+                self._state_norm_params.max_detection_range_m
+                if self._state_norm_params
+                else 50.0
+            ),
         )
         self.action_module = ActionModule(
-            traci_connection=traci, tls_id=self.tls_id,
+            traci_connection=traci,
+            tls_id=self.tls_id,
             timing_standards=self._timing if self._timing else TLSTimingStandards(),
         )
         self.action_module.set_phase_immediately(0)
 
         self.preproc = PreprocessorModule(
-            traci_connection=traci, tls_id=self.tls_id,
+            traci_connection=traci,
+            tls_id=self.tls_id,
             config=PreprocessorConfig(
-                include_queue=True, include_approach=True,
-                include_total_wait=True, include_max_wait=True, include_total_speed=True),
+                include_queue=True,
+                include_approach=True,
+                include_total_wait=True,
+                include_max_wait=True,
+                include_total_speed=True,
+            ),
             normalisation_params=self._state_norm_params,
         )
 
         self.reward_module = RewardModule(
-            traci_connection=traci, tls_id=self.tls_id,
+            traci_connection=traci,
+            tls_id=self.tls_id,
             normalisation_params=self._reward_norm_params,
         )
         try:
             self.reward_module.set_active_reward_function(self.reward_name)
         except Exception:
             self.reward_module.set_active_reward_function(RewardFunction.QUEUE)
-
 
     # ---- Gym API ----
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
@@ -244,20 +289,28 @@ class SingleTLSEnv(gym.Env):
 
         if self.action_module.ready_for_decision():
             try:
-                mask = self.action_module.get_action_mask()  # list[bool], len = n_actions
+                mask = (
+                    self.action_module.get_action_mask()
+                )  # list[bool], len = n_actions
 
                 # Guard out-of-range
                 if action < 0 or action >= len(mask):
                     info["invalid_action_index"] = int(action)
-                    action = (self.action_module.active_phase_memory.phase_index
-                            if self.action_module.active_phase_memory else 0)
+                    action = (
+                        self.action_module.active_phase_memory.phase_index
+                        if self.action_module.active_phase_memory
+                        else 0
+                    )
 
                 if not mask[action]:
                     info["invalid_action"] = int(action)
                     # Project to a valid action; prefer switching away from current
                     valid = [i for i, ok in enumerate(mask) if ok]
-                    cur = (self.action_module.active_phase_memory.phase_index
-                        if self.action_module.active_phase_memory else None)
+                    cur = (
+                        self.action_module.active_phase_memory.phase_index
+                        if self.action_module.active_phase_memory
+                        else None
+                    )
                     if cur is not None:
                         prefer = [i for i in valid if i != cur]
                         if prefer:
@@ -284,12 +337,13 @@ class SingleTLSEnv(gym.Env):
         reward = float(self.reward_module.compute_reward(state))
 
         t_now = float(traci.simulation.getTime())
-        terminated = bool(t_now >= self._t_end or traci.simulation.getMinExpectedNumber() <= 0)
+        terminated = bool(
+            t_now >= self._t_end or traci.simulation.getMinExpectedNumber() <= 0
+        )
         truncated = False
 
         info.update({"ignored_action": ignored, "t_sim": t_now})
         return obs, reward, terminated, truncated, info
-
 
     def close(self):
         self._stop()
@@ -307,7 +361,9 @@ def run_baseline_episode(
     nogui: bool,
     seed: Optional[int],
     fixed_green_s: float = 10.0,
-    timing: TLSTimingStandards = TLSTimingStandards(min_green_s=5, yellow_s=2, all_red_s=1, max_green_s=30),
+    timing: TLSTimingStandards = TLSTimingStandards(
+        min_green_s=5, yellow_s=2, all_red_s=1, max_green_s=30
+    ),
     csv_path: Path = Path("runs/ppo_test/baseline.csv"),
 ):
     csv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -333,7 +389,11 @@ def run_baseline_episode(
             now = float(traci.simulation.getTime())
             if am.ready_for_decision() and (now - last_switch_t >= fixed_green_s):
                 # simple toggler (if 2 actions), else round-robin
-                next_phase = (am.active_phase_memory.phase_index + 1) % am.n_actions if am.active_phase_memory else 0
+                next_phase = (
+                    (am.active_phase_memory.phase_index + 1) % am.n_actions
+                    if am.active_phase_memory
+                    else 0
+                )
                 am.set_phase(next_phase)
                 last_switch_t = now
 
@@ -437,8 +497,10 @@ def plot_compare(baseline_csv: Path, ppo_csv: Path, out_dir: Path):
     x = np.arange(3)
     width = 0.35
 
-    plt.bar(x - width/2, [means_q[0], means_w[0], means_r[0]], width, label="baseline")
-    plt.bar(x + width/2, [means_q[1], means_w[1], means_r[1]], width, label="ppo")
+    plt.bar(
+        x - width / 2, [means_q[0], means_w[0], means_r[0]], width, label="baseline"
+    )
+    plt.bar(x + width / 2, [means_q[1], means_w[1], means_r[1]], width, label="ppo")
     plt.xticks(x, ["mean queue", "mean wait", "mean reward"])
     plt.ylabel("value")
     plt.title("Averages over episode")
@@ -453,8 +515,13 @@ def plot_compare(baseline_csv: Path, ppo_csv: Path, out_dir: Path):
 #                          CLI
 # ============================================================
 def main():
-    ap = argparse.ArgumentParser(description="Single-intersection PPO vs baseline comparison")
-    ap.add_argument("--sumocfg", default="environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg")
+    ap = argparse.ArgumentParser(
+        description="Single-intersection PPO vs baseline comparison"
+    )
+    ap.add_argument(
+        "--sumocfg",
+        default="environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+    )
     ap.add_argument("--tls-id", default="tlJ")
     ap.add_argument("--nogui", action="store_true")
     ap.add_argument("--seed", type=int, default=42)
@@ -487,7 +554,9 @@ def main():
         reward_name=args.reward,
         normalise_reward=args.norm_reward,
         normalise_state=args.norm_state,
-        timing=TLSTimingStandards(min_green_s=5.0, yellow_s=2.0, all_red_s=1.0, max_green_s=30.0),
+        timing=TLSTimingStandards(
+            min_green_s=5.0, yellow_s=2.0, all_red_s=1.0, max_green_s=30.0
+        ),
     )
     model = PPO("MlpPolicy", env, verbose=1, device="cpu")
     print("[train] PPO training…")
