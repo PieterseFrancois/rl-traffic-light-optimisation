@@ -79,6 +79,44 @@
         "--logdir", ".surrounding_modules_test_runs/ppo_test/tb",
         "--tensorboard-port", "6006"
       ]
+    },
+    {
+      "name": "Embedder: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_embedder.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+    },
+    {
+      "name": "PPO Embedder Module: Manual Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/modules/tests/manual_test_state_action_embedder_rl_testcase.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+      },
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--tls-id", "tlJ",
+        "--nogui",
+        "--seed", "42",
+        "--episode-seconds", "4000",
+        "--ticks-per-decision", "1",
+        "--train-steps", "100000",
+        "--baseline-green-s", "20",
+        "--reward", "total_wait",
+        "--norm-state",
+        "--norm-reward",
+        "--outdir", ".embedder_module_test_runs/ppo_test",
+        "--tensorboard",
+        "--logdir", ".embedder_module_test_runs/ppo_test/tb",
+        "--tensorboard-port", "6006"
+      ]
     }
   ]
 }
