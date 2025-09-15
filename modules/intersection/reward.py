@@ -82,10 +82,6 @@ class RewardModule:
             self.normalise_rewards = True
             self.normalisation_params = normalisation_params
 
-    def get_available_reward_functions(self) -> list[str]:
-        """Get a list of available reward function names."""
-        return list(self._reward_fns.keys())
-
     def set_active_reward_function(self, name: str):
         """Set the active reward function by name."""
         if name not in self._reward_fns:
