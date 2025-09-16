@@ -244,3 +244,14 @@ class StateModule:
         self.state = temp_state_variable
 
         return self.state
+
+    def get_current_state(self) -> list[LaneMeasures]:
+        """Get the current state without reading from SUMO."""
+        if self.state is None:
+            raise ValueError("State has not been read yet.")
+
+        return self.state
+
+    def num_lanes(self) -> int:
+        """Get the number of approach lanes controlled by this traffic light."""
+        return len(self.approach_lanes)

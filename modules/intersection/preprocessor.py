@@ -266,3 +266,15 @@ class PreprocessorModule:
 
         # Convert feature matrix to tensor
         return tensor(feature_matrix, dtype=float32)
+
+    def num_features_per_lane(self) -> int:
+        """Get the number of features per lane based on the configuration."""
+        return sum(
+            [
+                self.config.include_queue,
+                self.config.include_approach,
+                self.config.include_total_wait,
+                self.config.include_max_wait,
+                self.config.include_total_speed,
+            ]
+        )
