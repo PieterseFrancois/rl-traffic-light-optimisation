@@ -25,7 +25,9 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 try:
     from torch_geometric.nn import GATv2Conv
 except Exception as e:
-    raise RuntimeError("torch-geometric is required: pip install torch-geometric") from e
+    raise RuntimeError(
+        "torch-geometric is required: pip install torch-geometric"
+    ) from e
 
 
 class StateEmbedder(nn.Module):
@@ -33,10 +35,12 @@ class StateEmbedder(nn.Module):
     Small MLP that turns raw per-intersection features into a fixed-length embedding.
     This is where the network can learn to weight certain lanes/features more strongly.
     """
+
     def __init__(self, in_dim: int, out_dim: int, hidden: int = 64):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(in_dim, hidden), nn.ReLU(),
+            nn.Linear(in_dim, hidden),
+            nn.ReLU(),
             nn.Linear(hidden, out_dim),
         )
 
@@ -49,6 +53,7 @@ class GATv2Aggregator(nn.Module):
     Two-layer GATv2 that mixes a node with its neighbours.
     Works on one local, fixed graph with N = 1 + K nodes (self + K neighbours).
     """
+
     def __init__(self, in_dim: int, out_dim: int, hidden: int = 64, heads: int = 2):
         super().__init__()
         self.g1 = GATv2Conv(in_dim, hidden, heads=heads, concat=True)
@@ -78,19 +83,23 @@ class NeighbourGNNFeatures(BaseFeaturesExtractor):
 
     def __init__(
         self,
-        observation_space,                 # gym.spaces.Dict with "self_raw" and "nbr_embed"
-        self_raw_dim: int,                 # F_raw
-        embed_dim: int,                    # D_emb (also GNN in/out)
+        observation_space,  # gym.spaces.Dict with "self_raw" and "nbr_embed"
+        self_raw_dim: int,  # F_raw
+        embed_dim: int,  # D_emb (also GNN in/out)
         gat_hidden: int = 64,
         gat_heads: int = 2,
-        edge_index: Optional[torch.Tensor] = None,   # (2, E) over N = 1+K nodes; 0 = self
+        edge_index: Optional[
+            torch.Tensor
+        ] = None,  # (2, E) over N = 1+K nodes; 0 = self
         device: Optional[torch.device] = None,
     ):
         super().__init__(observation_space, features_dim=embed_dim)
 
         self.device = device or torch.device("cpu")
         self.self_embed = StateEmbedder(self_raw_dim, embed_dim).to(self.device)
-        self.gnn = GATv2Aggregator(embed_dim, embed_dim, hidden=gat_hidden, heads=gat_heads).to(self.device)
+        self.gnn = GATv2Aggregator(
+            embed_dim, embed_dim, hidden=gat_hidden, heads=gat_heads
+        ).to(self.device)
 
         # Edge index for the fixed local graph of this agent.
         # If not provided, default to a star: self connected to each neighbour both ways.
@@ -137,9 +146,9 @@ class NeighbourGNNFeatures(BaseFeaturesExtractor):
         if nbr_emb.ndim == 1:
             # If K == 1 and SB3 squeezed it
             nbr_emb = nbr_emb.unsqueeze(0)
-        x = torch.cat([self_emb.unsqueeze(0), nbr_emb], dim=0)      # (N, D_emb)
-        eidx = self._ensure_edge_index(x.size(0))                   # (2, E)
-        h = self.gnn(x, eidx)                                       # (N, D_emb)
+        x = torch.cat([self_emb.unsqueeze(0), nbr_emb], dim=0)  # (N, D_emb)
+        eidx = self._ensure_edge_index(x.size(0))  # (2, E)
+        h = self.gnn(x, eidx)  # (N, D_emb)
         return h[0]
 
     def forward(self, obs) -> torch.Tensor:
@@ -152,18 +161,18 @@ class NeighbourGNNFeatures(BaseFeaturesExtractor):
         nbr_embed: torch.Tensor = obs["nbr_embed"].to(self.device)
 
         # 1) embed the self raw features
-        self_emb = self.self_embed(self_raw)                        # (B, D_emb)
+        self_emb = self.self_embed(self_raw)  # (B, D_emb)
 
         # 2) run per-sample GNN (B small in single-agent setups)
         B = self_emb.size(0)
         out_rows: List[torch.Tensor] = []
         last_self = None
         for b in range(B):
-            h0 = self._gnn_one(self_emb[b], nbr_embed[b])           # (D_emb,)
+            h0 = self._gnn_one(self_emb[b], nbr_embed[b])  # (D_emb,)
             out_rows.append(h0)
             last_self = h0
 
-        out = torch.stack(out_rows, dim=0)                          # (B, D_emb)
+        out = torch.stack(out_rows, dim=0)  # (B, D_emb)
 
         # Cache last self embedding for publishing
         self._last_self_embedding = last_self

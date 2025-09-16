@@ -34,10 +34,11 @@ import gymnasium as gym
 from modules.intersection.features_extractor import NeighbourGNNFeatures
 
 from torch_geometric.nn import GATv2Conv  # noqa: F401
- 
+
 # -------------------------
 # Helper fixtures/functions
 # -------------------------
+
 
 @pytest.fixture(autouse=True)
 def set_seed():
@@ -51,10 +52,16 @@ def make_obs_space(F_raw: int, K: int, D_emb: int):
     Build a minimal Dict observation space compatible with the extractor.
     Shapes must match the tensors passed in tests.
     """
-    return gym.spaces.Dict({
-        "self_raw": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32),
-        "nbr_embed": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(K, D_emb), dtype=np.float32),
-    })
+    return gym.spaces.Dict(
+        {
+            "self_raw": gym.spaces.Box(
+                low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32
+            ),
+            "nbr_embed": gym.spaces.Box(
+                low=-np.inf, high=np.inf, shape=(K, D_emb), dtype=np.float32
+            ),
+        }
+    )
 
 
 def make_extractor(F_raw=6, K=3, D_emb=8, edge_index=None, device="cpu"):
@@ -87,6 +94,7 @@ def make_obs(B=1, F_raw=6, K=3, D_emb=8):
 # The test cases
 # -------------
 
+
 def test_forward_shape_and_determinism():
     """
     1) Forward shape & determinism
@@ -101,7 +109,9 @@ def test_forward_shape_and_determinism():
     out2 = extr(obs)
 
     assert out1.shape == (4, D)
-    assert torch.allclose(out1, out2, atol=0.0), "Extractor should be deterministic for identical inputs"
+    assert torch.allclose(
+        out1, out2, atol=0.0
+    ), "Extractor should be deterministic for identical inputs"
 
 
 def test_neighbour_permutation_invariance_star_graph():
@@ -128,7 +138,9 @@ def test_neighbour_permutation_invariance_star_graph():
     }
     out_perm = extr(obs_perm)
 
-    assert torch.allclose(out_orig, out_perm, atol=1e-6), "Self embedding should be invariant to neighbour order (star)"
+    assert torch.allclose(
+        out_orig, out_perm, atol=1e-6
+    ), "Self embedding should be invariant to neighbour order (star)"
 
 
 def test_two_hop_propagation_vs_one_hop():
@@ -144,15 +156,15 @@ def test_two_hop_propagation_vs_one_hop():
     B = 1
 
     # Edge list for (0<->1) and (1<->2) only: a two-hop chain
-    e_chain = torch.tensor([[0, 1, 1, 2],
-                            [1, 0, 2, 1]], dtype=torch.long)
+    e_chain = torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long)
 
     # Extractor A: chain graph
     extr_chain = make_extractor(F_raw=F_raw, K=K, D_emb=D, edge_index=e_chain)
 
     # Extractor B: star with only 0<->1 (leave 2 disconnected from 0)
-    e_onehop = torch.tensor([[0, 1, 1, 0],
-                             [1, 0, 0, 1]], dtype=torch.long)  # effectively 0<->1 only
+    e_onehop = torch.tensor(
+        [[0, 1, 1, 0], [1, 0, 0, 1]], dtype=torch.long
+    )  # effectively 0<->1 only
     extr_onehop = make_extractor(F_raw=F_raw, K=K, D_emb=D, edge_index=e_onehop)
 
     # Sync weights so we can compare responses fairly
@@ -168,7 +180,9 @@ def test_two_hop_propagation_vs_one_hop():
         "self_raw": obs["self_raw"].clone(),
         "nbr_embed": obs["nbr_embed"].clone(),
     }
-    obs_pert["nbr_embed"][:, 1, :] += 0.25  # neighbour index 2 is position 1 (0=self, 1..K neighbours)
+    obs_pert["nbr_embed"][
+        :, 1, :
+    ] += 0.25  # neighbour index 2 is position 1 (0=self, 1..K neighbours)
 
     out_chain = extr_chain(obs_pert)
     out_onehop = extr_onehop(obs_pert)
@@ -178,8 +192,12 @@ def test_two_hop_propagation_vs_one_hop():
     # In one-hop star (with node 2 disconnected from 0), no effect expected
     delta_onehop = torch.norm(out_onehop - base_onehop).item()
 
-    assert delta_chain > 1e-6, "Two-hop change should affect the self embedding in a 2-layer GAT over the chain"
-    assert delta_onehop < 1e-8, "Disconnected neighbour should not affect the self embedding"
+    assert (
+        delta_chain > 1e-6
+    ), "Two-hop change should affect the self embedding in a 2-layer GAT over the chain"
+    assert (
+        delta_onehop < 1e-8
+    ), "Disconnected neighbour should not affect the self embedding"
 
 
 def test_missing_neighbour_zero_placeholder():
@@ -214,7 +232,9 @@ def test_missing_neighbour_zero_placeholder():
     d_zero = torch.norm(out_zero - base).item()
     d_rand = torch.norm(out_rand - base).item()
 
-    assert d_zero <= d_rand + 1e-6, "Zero placeholder should perturb the embedding no more than a random replacement"
+    assert (
+        d_zero <= d_rand + 1e-6
+    ), "Zero placeholder should perturb the embedding no more than a random replacement"
 
 
 def test_gradient_flow_through_embedder_and_gnn():
@@ -228,14 +248,18 @@ def test_gradient_flow_through_embedder_and_gnn():
     extr = make_extractor(F_raw=F_raw, K=K, D_emb=D)
     obs = make_obs(B=3, F_raw=F_raw, K=K, D_emb=D)
 
-    out = extr(obs)                  # (B, D)
-    loss = out.pow(2).mean()         # simple scalar loss
+    out = extr(obs)  # (B, D)
+    loss = out.pow(2).mean()  # simple scalar loss
     loss.backward()
 
-    got_embed_grad = any(p.grad is not None and torch.isfinite(p.grad).all()
-                         for p in extr.self_embed.parameters())
-    got_gnn_grad = any(p.grad is not None and torch.isfinite(p.grad).all()
-                       for p in extr.gnn.parameters())
+    got_embed_grad = any(
+        p.grad is not None and torch.isfinite(p.grad).all()
+        for p in extr.self_embed.parameters()
+    )
+    got_gnn_grad = any(
+        p.grad is not None and torch.isfinite(p.grad).all()
+        for p in extr.gnn.parameters()
+    )
 
     assert got_embed_grad, "Self embedder did not receive gradients"
     assert got_gnn_grad, "GNN did not receive gradients"
@@ -251,11 +275,14 @@ def test_cached_self_embedding_getter():
     extr = make_extractor(F_raw=F_raw, K=K, D_emb=D)
     obs = make_obs(B=1, F_raw=F_raw, K=K, D_emb=D)
 
-    out = extr(obs)                  # (1, D)
+    out = extr(obs)  # (1, D)
     cached = extr.get_last_self_embedding()
     assert cached is not None
     assert cached.shape == (D,)
-    assert torch.allclose(out.squeeze(0), cached, atol=0.0), "Cached embedding must equal the last forward output for B=1"
+    assert torch.allclose(
+        out.squeeze(0), cached, atol=0.0
+    ), "Cached embedding must equal the last forward output for B=1"
+
 
 def test_output_dim_consistency_across_self_raw_lengths():
     """
@@ -275,7 +302,9 @@ def test_output_dim_consistency_across_self_raw_lengths():
     out_a = extr_a(obs_a)
     out_b = extr_b(obs_b)
 
-    assert out_a.shape[-1] == D and out_b.shape[-1] == D, "Final embedding dim must equal D_emb"
+    assert (
+        out_a.shape[-1] == D and out_b.shape[-1] == D
+    ), "Final embedding dim must equal D_emb"
     assert out_a.ndim == 2 and out_b.ndim == 2
     # Numerical sanity
     assert torch.isfinite(out_a).all() and torch.isfinite(out_b).all()

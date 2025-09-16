@@ -25,7 +25,9 @@ class IntersectionCommClient:
 
     def publish_embedding(self, sender_id: str, embedding: np.ndarray) -> None:
         if sender_id != self.intersection_id:
-            raise ValueError(f"Client {self.intersection_id} cannot publish as {sender_id}")
+            raise ValueError(
+                f"Client {self.intersection_id} cannot publish as {sender_id}"
+            )
         self.bus.publish_embedding(sender_id, embedding)
 
     # --------------------------- subscribe -----------------------------------
@@ -36,7 +38,9 @@ class IntersectionCommClient:
         callback: Callable[[str, np.ndarray], None],
         replay_last: Optional[bool] = None,
     ) -> None:
-        self.bus.subscribe_embeddings(self.intersection_id, publisher_id, callback, replay_last=replay_last)
+        self.bus.subscribe_embeddings(
+            self.intersection_id, publisher_id, callback, replay_last=replay_last
+        )
         self._subs.add(publisher_id)
 
     def unsubscribe_embeddings(self, publisher_id: str) -> None:

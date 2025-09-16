@@ -6,12 +6,23 @@ import numpy as np
 # Signature for reward functions
 # det_in, det_out, reader, obs, action, info, **kwargs -> float
 RewardFn = Callable[
-    [Sequence[str], Sequence[str], Callable[[str], Mapping[str, float]], Dict[str, np.ndarray], int, Dict[str, Any]],
+    [
+        Sequence[str],
+        Sequence[str],
+        Callable[[str], Mapping[str, float]],
+        Dict[str, np.ndarray],
+        int,
+        Dict[str, Any],
+    ],
     float,
 ]
 
+
 class RewardModule:  # light interface
-    def compute(self, obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]) -> float: ...
+    def compute(
+        self, obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]
+    ) -> float: ...
+
 
 class SimpleReward(RewardModule):
     """
@@ -21,6 +32,7 @@ class SimpleReward(RewardModule):
         R = SimpleReward(det_in, reader, fn_name="queue_penalty", fn_kwargs=dict(w_count=1.0, w_halt=0.5))
         r = R.compute(obs, action, info)
     """
+
     def __init__(
         self,
         detectors_in: Sequence[str],
@@ -44,30 +56,61 @@ class SimpleReward(RewardModule):
             fn = _REGISTRY[fn_name]
 
         # Bind parameters so compute(obs, action, info) is clean
-        def _bound(obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]) -> float:
-            return float(fn(self.det_in, self.det_out, self.reader, obs, action, info, **self._kwargs))
+        def _bound(
+            obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]
+        ) -> float:
+            return float(
+                fn(
+                    self.det_in,
+                    self.det_out,
+                    self.reader,
+                    obs,
+                    action,
+                    info,
+                    **self._kwargs,
+                )
+            )
 
         self._compute = _bound
 
-    def compute(self, obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]) -> float:
+    def compute(
+        self, obs: Dict[str, np.ndarray], action: int, info: Dict[str, Any]
+    ) -> float:
         return self._compute(obs, action, info)
 
 
 # ---------------- Built-in reward functions (optional) ----------------
 
+
 def queue_penalty(
-    det_in: Sequence[str], det_out: Sequence[str], reader, obs, action, info, *, w_count: float = 1.0, w_halt: float = 0.5
+    det_in: Sequence[str],
+    det_out: Sequence[str],
+    reader,
+    obs,
+    action,
+    info,
+    *,
+    w_count: float = 1.0,
+    w_halt: float = 0.5,
 ) -> float:
     """reward = -(w_count * sum(count_in) + w_halt * sum(halt_in))"""
     total = 0.0
     for d in det_in:
         m = reader(d) or {}
         total += w_count * float(m.get("count", 0.0))
-        total += w_halt  * float(m.get("halt", 0.0))
+        total += w_halt * float(m.get("halt", 0.0))
     return -total
 
+
 def throughput_out(
-    det_in: Sequence[str], det_out: Sequence[str], reader, obs, action, info, *, w: float = 1.0
+    det_in: Sequence[str],
+    det_out: Sequence[str],
+    reader,
+    obs,
+    action,
+    info,
+    *,
+    w: float = 1.0,
 ) -> float:
     """reward = +w * sum(count_out)"""
     total = 0.0
@@ -76,8 +119,16 @@ def throughput_out(
         total += float(m.get("count", 0.0))
     return w * total
 
+
 def avg_speed_in(
-    det_in: Sequence[str], det_out: Sequence[str], reader, obs, action, info, *, w: float = 1.0
+    det_in: Sequence[str],
+    det_out: Sequence[str],
+    reader,
+    obs,
+    action,
+    info,
+    *,
+    w: float = 1.0,
 ) -> float:
     """reward = +w * mean(speed_in)"""
     if not det_in:
@@ -88,8 +139,16 @@ def avg_speed_in(
         s += float(m.get("speed", 0.0))
     return w * (s / float(len(det_in)))
 
+
 def linear_combo(
-    det_in: Sequence[str], det_out: Sequence[str], reader, obs, action, info, *, terms: Sequence[tuple[str, float]] = ()
+    det_in: Sequence[str],
+    det_out: Sequence[str],
+    reader,
+    obs,
+    action,
+    info,
+    *,
+    terms: Sequence[tuple[str, float]] = (),
 ) -> float:
     """
     Combine other named functions: terms=[("queue_penalty", 1.0), ("throughput_out", 0.2)]
@@ -120,7 +179,11 @@ def max_pressure_lite(
     def is_transitional(s: str) -> bool:
         return "y" in s  # simple but effective
 
-    state = cur_state if (cur_state and is_greenful(cur_state) and not is_transitional(cur_state)) else act_state
+    state = (
+        cur_state
+        if (cur_state and is_greenful(cur_state) and not is_transitional(cur_state))
+        else act_state
+    )
     if not state or not is_greenful(state):
         # Nothing useable; evaluate to 0 rather than injecting noise mid-amber
         return 0.0
@@ -132,7 +195,7 @@ def max_pressure_lite(
         if i >= len(state):
             break
         if state[i] in ("g", "G"):
-            for (in_lane, _, out_lane) in group:
+            for in_lane, _, out_lane in group:
                 if in_lane:
                     active_in.add(in_lane)
                 if out_lane:

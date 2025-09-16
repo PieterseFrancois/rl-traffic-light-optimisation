@@ -3,10 +3,13 @@ import gymnasium as gym
 import numpy as np
 import traci
 
+
 class IntersectionEnv(gym.Env):
     metadata = {"render_modes": []}
 
-    def __init__(self, agent, ticks_per_decision: int = 5, max_seconds: float | None = None):
+    def __init__(
+        self, agent, ticks_per_decision: int = 5, max_seconds: float | None = None
+    ):
         super().__init__()
         self.agent = agent
         self.ticks_per_decision = int(ticks_per_decision)
@@ -19,10 +22,16 @@ class IntersectionEnv(gym.Env):
         probe = self.agent._build_obs()
         F_raw = int(np.asarray(probe["self_raw"]).size)
 
-        self.observation_space = gym.spaces.Dict({
-            "self_raw":  gym.spaces.Box(low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32),
-            "nbr_embed": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(K_eff, D_emb), dtype=np.float32),
-        })
+        self.observation_space = gym.spaces.Dict(
+            {
+                "self_raw": gym.spaces.Box(
+                    low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32
+                ),
+                "nbr_embed": gym.spaces.Box(
+                    low=-np.inf, high=np.inf, shape=(K_eff, D_emb), dtype=np.float32
+                ),
+            }
+        )
         # discrete actions over the mapping defined in the action module
         n_actions = len(self.agent.action.map or self.agent.action.map_state)
         self.action_space = gym.spaces.Discrete(n_actions)
@@ -58,10 +67,14 @@ class IntersectionEnv(gym.Env):
                 info = dict()
                 info["tls_id"] = self.agent.cfg.tls_id
                 # chosen action’s target green string (state-string mode)
-                if self.agent.action.map_state is not None and 0 <= action < len(self.agent.action.map_state):
+                if self.agent.action.map_state is not None and 0 <= action < len(
+                    self.agent.action.map_state
+                ):
                     info["action_state"] = self.agent.action.map_state[action]
                 # actual current TLS state (may be amber/red if called immediately after apply)
-                info["cur_state"] = traci.trafficlight.getRedYellowGreenState(self.agent.cfg.tls_id)
+                info["cur_state"] = traci.trafficlight.getRedYellowGreenState(
+                    self.agent.cfg.tls_id
+                )
                 reward = float(self.agent.reward.compute(obs_next, action, info))
             except Exception as e:
                 print(f"Error computing reward: {e}")

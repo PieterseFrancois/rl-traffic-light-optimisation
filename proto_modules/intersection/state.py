@@ -46,6 +46,7 @@ def set_detector_reader_norm(norm_mode: str, ref_length_m: float = 30.0) -> None
 
 # -------------------- E2 helper: length cache --------------------
 
+
 def _e2_length(det_id: str) -> float:
     cache: Dict[str, float] = _e2_length.__dict__.setdefault("_cache", {})
     if det_id not in cache:
@@ -58,6 +59,7 @@ def _e2_length(det_id: str) -> float:
 
 # -------------------- reader (RAW values, no normalisation) ------------------
 
+
 def detector_reader(det_id: str) -> Dict[str, float]:
     """
     Returns RAW E2 metrics for 'det_id' (no normalisation):
@@ -68,15 +70,16 @@ def detector_reader(det_id: str) -> Dict[str, float]:
     """
     try:
         return {
-            "halt": float(traci.lanearea.getLastStepHaltingNumber(det_id)),   # type: ignore
+            "halt": float(traci.lanearea.getLastStepHaltingNumber(det_id)),  # type: ignore
             "count": float(traci.lanearea.getLastStepVehicleNumber(det_id)),  # type: ignore
-            "speed": float(traci.lanearea.getLastStepMeanSpeed(det_id)),      # type: ignore
+            "speed": float(traci.lanearea.getLastStepMeanSpeed(det_id)),  # type: ignore
         }
     except Exception:
         return {"halt": 0.0, "count": 0.0, "speed": 0.0}
 
 
 # -------------------- grouping and normalisation --------------------
+
 
 def _read_one(det_id: str, reader) -> Tuple[Tensor, float]:
     """One physical E2 → (raw metrics tensor, length metres)."""
@@ -158,6 +161,7 @@ def _stack_logical(
 
 # -------------------- public API --------------------
 
+
 def build_self_raw(
     intersection,
     detector_reader,
@@ -170,7 +174,9 @@ def build_self_raw(
       else module defaults configured via set_detector_reader_norm(...).
     """
     cfg = getattr(intersection, "cfg", None)
-    groups = getattr(intersection, "detector_groups", None) or (getattr(cfg, "detector_groups", None) if cfg else None)
+    groups = getattr(intersection, "detector_groups", None) or (
+        getattr(cfg, "detector_groups", None) if cfg else None
+    )
     mode = str(
         getattr(intersection, "e2_norm_mode", None)
         or (getattr(cfg, "e2_norm_mode", None) if cfg else None)
@@ -182,8 +188,12 @@ def build_self_raw(
         or _DEFAULT_NORM["ref_length_m"]
     )
 
-    Din = _stack_logical(intersection.detectors_in,  detector_reader, groups, mode=mode, L_ref=L_ref).to(device)
-    Dout = _stack_logical(intersection.detectors_out, detector_reader, groups, mode=mode, L_ref=L_ref).to(device)
+    Din = _stack_logical(
+        intersection.detectors_in, detector_reader, groups, mode=mode, L_ref=L_ref
+    ).to(device)
+    Dout = _stack_logical(
+        intersection.detectors_out, detector_reader, groups, mode=mode, L_ref=L_ref
+    ).to(device)
 
     parts: List[Tensor] = []
     if Din.numel():
@@ -208,9 +218,23 @@ def build_matrices(
 ) -> Tuple[Tensor, Tensor]:
     """Convenience for debugging: return (Din, Dout) matrices on 'device'."""
     cfg = getattr(intersection, "cfg", None)
-    groups = getattr(intersection, "detector_groups", None) or (getattr(cfg, "detector_groups", None) if cfg else None)
-    mode = str(getattr(intersection, "e2_norm_mode", None) or (getattr(cfg, "e2_norm_mode", None) if cfg else None) or _DEFAULT_NORM["mode"])
-    L_ref = float(getattr(intersection, "e2_ref_length_m", None) or (getattr(cfg, "e2_ref_length_m", None) if cfg else None) or _DEFAULT_NORM["ref_length_m"])
-    Din  = _stack_logical(intersection.detectors_in,  detector_reader, groups, mode=mode, L_ref=L_ref).to(device)
-    Dout = _stack_logical(intersection.detectors_out, detector_reader, groups, mode=mode, L_ref=L_ref).to(device)
-    return Din, Dout    
+    groups = getattr(intersection, "detector_groups", None) or (
+        getattr(cfg, "detector_groups", None) if cfg else None
+    )
+    mode = str(
+        getattr(intersection, "e2_norm_mode", None)
+        or (getattr(cfg, "e2_norm_mode", None) if cfg else None)
+        or _DEFAULT_NORM["mode"]
+    )
+    L_ref = float(
+        getattr(intersection, "e2_ref_length_m", None)
+        or (getattr(cfg, "e2_ref_length_m", None) if cfg else None)
+        or _DEFAULT_NORM["ref_length_m"]
+    )
+    Din = _stack_logical(
+        intersection.detectors_in, detector_reader, groups, mode=mode, L_ref=L_ref
+    ).to(device)
+    Dout = _stack_logical(
+        intersection.detectors_out, detector_reader, groups, mode=mode, L_ref=L_ref
+    ).to(device)
+    return Din, Dout

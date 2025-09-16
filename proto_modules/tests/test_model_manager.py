@@ -36,6 +36,7 @@ from modules.intersection.model_manager import ModelManager
 # Minimal single-agent env
 # ------------------------
 
+
 class _TinyBoxEnv(gym.Env):
     """
     Minimal SB3-compatible env:
@@ -43,6 +44,7 @@ class _TinyBoxEnv(gym.Env):
       - Action: Discrete(A)
       - Reward: simple shaped function of action vs timestep
     """
+
     metadata = {"render_modes": []}
 
     def __init__(self, F=4, A=3, horizon=10, seed=123):
@@ -50,7 +52,9 @@ class _TinyBoxEnv(gym.Env):
         self.F, self.A, self.horizon = F, A, horizon
         self.t = 0
         self.rng = np.random.default_rng(seed)
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(F,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=(F,), dtype=np.float32
+        )
         self.action_space = gym.spaces.Discrete(A)
 
     def _obs(self):
@@ -75,6 +79,7 @@ class _TinyBoxEnv(gym.Env):
 # Test fixtures
 # -------------
 
+
 @pytest.fixture(autouse=True)
 def _seed_all():
     torch.manual_seed(1234)
@@ -97,6 +102,7 @@ def mgr(tmp_path):
 # -----------
 # The tests
 # -----------
+
 
 def test_snapshot_and_registry_update(mgr, env):
     """
@@ -157,11 +163,12 @@ def test_restore_into_replaces_inner_model(mgr, env):
     call restore_into, and verify the attribute gets replaced by a freshly
     loaded model that can predict.
     """
+
     class Wrapper:
         pass
 
     w = Wrapper()
-    w.model = PPO("MlpPolicy", env, n_steps=8, batch_size=8, verbose=0, device="cpu") # type: ignore
+    w.model = PPO("MlpPolicy", env, n_steps=8, batch_size=8, verbose=0, device="cpu")  # type: ignore
 
     # Snapshot a separate model to restore from
     model_src = PPO("MlpPolicy", env, n_steps=8, batch_size=8, verbose=0, device="cpu")
@@ -171,7 +178,7 @@ def test_restore_into_replaces_inner_model(mgr, env):
     assert used_ver == ver
 
     obs, _ = env.reset()
-    act, _ = w.model.predict(obs, deterministic=True) # type: ignore
+    act, _ = w.model.predict(obs, deterministic=True)  # type: ignore
     a = int(np.asarray(act).squeeze())
     assert 0 <= a < env.action_space.n
 
@@ -233,7 +240,9 @@ def test_errors_no_snapshots_yet(tmp_path, env):
 
     class W:
         def __init__(self, env):  # have a 'model' to satisfy restore_into path
-            self.model = PPO("MlpPolicy", env, n_steps=8, batch_size=8, verbose=0, device="cpu")
+            self.model = PPO(
+                "MlpPolicy", env, n_steps=8, batch_size=8, verbose=0, device="cpu"
+            )
 
     with pytest.raises(KeyError):
         _ = mgr.restore_into(W(env), version=None, env=env)

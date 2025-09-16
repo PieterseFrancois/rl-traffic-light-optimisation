@@ -6,7 +6,7 @@ import random
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from modules import lane_metrics
 from modules.metrics_structs import SingleIntersectionMetrics
@@ -16,16 +16,11 @@ class SumoTrafficEnv(gymnasium.Env):
     def __init__(self):
         super(SumoTrafficEnv, self).__init__()
 
-        self.lanes = {
-            "North": "NJ_0",
-            "East": "EJ_0",
-            "South": "SJ_0",
-            "West": "WJ_0"
-        }
+        self.lanes = {"North": "NJ_0", "East": "EJ_0", "South": "SJ_0", "West": "WJ_0"}
         self.lane_ids = list(self.lanes.values())
         self.phases = [
             {"id": 0, "green_lanes": ["NJ_0", "SJ_0"]},  # NS green
-            {"id": 1, "green_lanes": ["EJ_0", "WJ_0"]}   # EW green
+            {"id": 1, "green_lanes": ["EJ_0", "WJ_0"]},  # EW green
         ]
         self.current_phase = 0
 
@@ -33,12 +28,13 @@ class SumoTrafficEnv(gymnasium.Env):
         self.action_space = spaces.Discrete(len(self.phases))
 
         # Observation = queue lengths on all 4 lanes
-        self.observation_space = spaces.Box(low=0, high=100, shape=(4,), dtype=np.float32)
+        self.observation_space = spaces.Box(
+            low=0, high=100, shape=(4,), dtype=np.float32
+        )
 
         self.metrics = SingleIntersectionMetrics()
         self.sim_step = 0
         self.steps_in_current_phase = 0
-
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -59,9 +55,10 @@ class SumoTrafficEnv(gymnasium.Env):
 
         return self._get_observation(), {}
 
-
     def step(self, action):
-        min_phase_duration = 10  # minimum time (in simulation steps) a phase must be active
+        min_phase_duration = (
+            10  # minimum time (in simulation steps) a phase must be active
+        )
 
         # Check if we are allowed to switch the phase
         if action != self.current_phase:
@@ -85,12 +82,11 @@ class SumoTrafficEnv(gymnasium.Env):
 
         return obs, reward, done, truncated, info
 
-
     def _get_observation(self):
-        return np.array([
-            traci.lane.getLastStepVehicleNumber(lane_id)
-            for lane_id in self.lane_ids
-        ], dtype=np.float32)
+        return np.array(
+            [traci.lane.getLastStepVehicleNumber(lane_id) for lane_id in self.lane_ids],
+            dtype=np.float32,
+        )
 
     def render(self, mode="human"):
         pass  # optional
@@ -106,18 +102,15 @@ class SumoTrafficEnv(gymnasium.Env):
             "N_straight": ["NJ", "JS"],
             "N_left": ["NJ", "JE"],
             "N_right": ["NJ", "JW"],
-
             "S_straight": ["SJ", "JN"],
             "S_left": ["SJ", "JE"],
             "S_right": ["SJ", "JW"],
-
             "E_straight": ["EJ", "JW"],
             "E_left": ["EJ", "JN"],
             "E_right": ["EJ", "JS"],
-
             "W_straight": ["WJ", "JE"],
             "W_left": ["WJ", "JS"],
-            "W_right": ["WJ", "JN"]
+            "W_right": ["WJ", "JN"],
         }
 
         # Register routes in SUMO
@@ -126,33 +119,32 @@ class SumoTrafficEnv(gymnasium.Env):
 
         # Vehicle distribution (tunable per direction)
         num_vehicles_per_direction = 30
-        movement_probs = {
-            "straight": 0.6,
-            "left": 0.2,
-            "right": 0.2
-        }
+        movement_probs = {"straight": 0.6, "left": 0.2, "right": 0.2}
 
         # Northbound vehicles
         for i in range(num_vehicles_per_direction):
-            move = random.choices(["N_straight", "N_left", "N_right"],
-                                weights=movement_probs.values())[0]
+            move = random.choices(
+                ["N_straight", "N_left", "N_right"], weights=movement_probs.values()
+            )[0]
             traci.vehicle.add(f"veh_N_{i}", move, depart=i * 1.0)
 
         # Southbound vehicles
         for i in range(num_vehicles_per_direction):
-            move = random.choices(["S_straight", "S_left", "S_right"],
-                                weights=movement_probs.values())[0]
+            move = random.choices(
+                ["S_straight", "S_left", "S_right"], weights=movement_probs.values()
+            )[0]
             traci.vehicle.add(f"veh_S_{i}", move, depart=i * 1.0)
 
         # Eastbound vehicles
         for i in range(num_vehicles_per_direction):
-            move = random.choices(["E_straight", "E_left", "E_right"],
-                                weights=movement_probs.values())[0]
+            move = random.choices(
+                ["E_straight", "E_left", "E_right"], weights=movement_probs.values()
+            )[0]
             traci.vehicle.add(f"veh_E_{i}", move, depart=i * 1.0)
 
         # Westbound vehicles
         for i in range(num_vehicles_per_direction):
-            move = random.choices(["W_straight", "W_left", "W_right"],
-                                weights=movement_probs.values())[0]
+            move = random.choices(
+                ["W_straight", "W_left", "W_right"], weights=movement_probs.values()
+            )[0]
             traci.vehicle.add(f"veh_W_{i}", move, depart=i * 1.0)
-

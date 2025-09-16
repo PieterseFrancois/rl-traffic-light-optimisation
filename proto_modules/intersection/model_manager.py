@@ -32,8 +32,10 @@ import shutil
 import torch
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3 import PPO, A2C
+
 try:
     from sb3_contrib import MaskablePPO
+
     _HAS_CONTRIB = True
 except Exception:
     _HAS_CONTRIB = False
@@ -152,7 +154,9 @@ class ModelManager:
                 return os.path.join(self.agent_dir, rec["file"])
         raise KeyError(f"Version {version} not found for agent '{self.agent_id}'")
 
-    def load_sb3(self, version: Optional[int], env, device: str | torch.device = "auto") -> BaseAlgorithm:
+    def load_sb3(
+        self, version: Optional[int], env, device: str | torch.device = "auto"
+    ) -> BaseAlgorithm:
         """
         Load the SB3 model for 'version' and return the algorithm instance.
         If version is None, the latest snapshot is used.
@@ -168,13 +172,20 @@ class ModelManager:
         algo_name = str(rec.get("algo", "PPO"))
         AlgoClass = _ALGOS.get(algo_name)
         if AlgoClass is None:
-            raise ValueError(f"Unsupported algo '{algo_name}' in registry for version {version}")
+            raise ValueError(
+                f"Unsupported algo '{algo_name}' in registry for version {version}"
+            )
 
         zip_path = self._version_to_path(version)
         return AlgoClass.load(zip_path, env=env, device=device)
 
-
-    def restore_into(self, policy_module, version: Optional[int], env, device: str | torch.device = "auto") -> int:
+    def restore_into(
+        self,
+        policy_module,
+        version: Optional[int],
+        env,
+        device: str | torch.device = "auto",
+    ) -> int:
         """
         Load the given 'version' directly into an SB3PolicyModule wrapper (in-place).
         Returns the version used.
@@ -190,12 +201,13 @@ class ModelManager:
         algo_name = str(rec.get("algo", "PPO"))
         AlgoClass = _ALGOS.get(algo_name)
         if AlgoClass is None:
-            raise ValueError(f"Unsupported algo '{algo_name}' in registry for version {version}")
+            raise ValueError(
+                f"Unsupported algo '{algo_name}' in registry for version {version}"
+            )
 
         zip_path = self._version_to_path(version)
         policy_module.model = AlgoClass.load(zip_path, env=env, device=device)
         return version
-
 
     # ---------- housekeeping ----------
 
@@ -204,7 +216,9 @@ class ModelManager:
         zip_path = self._version_to_path(version)
         if os.path.exists(zip_path):
             os.remove(zip_path)
-        self._reg["versions"] = [rec for rec in self._reg["versions"] if rec["version"] != version]
+        self._reg["versions"] = [
+            rec for rec in self._reg["versions"] if rec["version"] != version
+        ]
         self._save_registry()
 
     def export(self, version: int, dest_path: str) -> None:

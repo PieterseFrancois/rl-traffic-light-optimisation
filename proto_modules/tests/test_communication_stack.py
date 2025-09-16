@@ -34,6 +34,7 @@ import sys
 # Import with alias helper
 # -------------------------
 
+
 @pytest.fixture(scope="module")
 def comm_modules():
     """
@@ -49,6 +50,7 @@ def comm_modules():
 # -------------------------
 # Small sink for callbacks
 # -------------------------
+
 
 class _Sink:
     def __init__(self):
@@ -66,6 +68,7 @@ class _Sink:
 # Test utilities
 # ----------------
 
+
 def _arr(v):
     return np.asarray(v, dtype=np.float32)
 
@@ -73,6 +76,7 @@ def _arr(v):
 # ---------------
 # The test cases
 # ---------------
+
 
 def test_basic_pub_sub_delivery(comm_modules):
     """
@@ -88,7 +92,9 @@ def test_basic_pub_sub_delivery(comm_modules):
     A.subscribe_embeddings("B", sinkA.cb, replay_last=False)  # A listens to B
     # C not subscribed to B
 
-    m = _arr([1, 2, 3],)
+    m = _arr(
+        [1, 2, 3],
+    )
     B.publish_embedding("B", m)
 
     # A should receive exactly one event from B; C none
@@ -240,8 +246,10 @@ def test_concurrency_smoke(comm_modules):
 
     t1 = threading.Thread(target=pub, args=(B, "B", 20))
     t2 = threading.Thread(target=pub, args=(C, "C", 20))
-    t1.start(); t2.start()
-    t1.join(); t2.join()
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
 
     # A should have received 40 events total (allow a small buffer for CI jitter if needed)
     assert len(sinkA.events) == 40

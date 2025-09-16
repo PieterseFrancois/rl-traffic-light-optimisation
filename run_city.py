@@ -10,9 +10,11 @@ import yaml
 import numpy as np
 import traci
 
-from utils.sumo_helpers import start_sumo, close_sumo                                      # sumo start/stop
+from utils.sumo_helpers import start_sumo, close_sumo  # sumo start/stop
 
-from environments.ingolstadt.intersections.builder import build_envs_from_yaml                    # your builder
+from environments.ingolstadt.intersections.builder import (
+    build_envs_from_yaml,
+)  # your builder
 from proto_modules.communication_bus import CommunicationBus
 from proto_modules.intersection.env_adapter import IntersectionEnv
 from proto_modules.intersection.state import build_matrices
@@ -22,6 +24,7 @@ from proto_modules.intersection.policy import SB3PolicyModule
 # --------------------- uplift utils ---------------------
 def _mean_col_csv(path: Path, col: str) -> float:
     import csv, math
+
     xs = []
     with open(path) as f:
         r = csv.DictReader(f)
@@ -31,22 +34,39 @@ def _mean_col_csv(path: Path, col: str) -> float:
                 xs.append(float(v))
     return float(np.mean(xs)) if xs else float("nan")
 
-def _compute_uplift(run_dir: Path, metrics=("halt", "count", "speed")) -> Dict[str, Dict[str, float]]:
+
+def _compute_uplift(
+    run_dir: Path, metrics=("halt", "count", "speed")
+) -> Dict[str, Dict[str, float]]:
     base_dir = run_dir / "baseline"
     eval_dir = run_dir / "eval"
     out: Dict[str, Dict[str, float]] = {}
 
     # discover node ids from csvs
     import glob, os
+
     base_csvs = glob.glob(str(base_dir / "baseline_*.csv"))
     eval_csvs = glob.glob(str(eval_dir / "eval_*.csv"))
-    node_ids = sorted({os.path.basename(p).split("_", 1)[1].split(".")[0] for p in base_csvs + eval_csvs})
+    node_ids = sorted(
+        {
+            os.path.basename(p).split("_", 1)[1].split(".")[0]
+            for p in base_csvs + eval_csvs
+        }
+    )
 
     for nid in node_ids:
         node_stats: Dict[str, float] = {}
         for m in metrics:
-            b = _mean_col_csv(base_dir / f"baseline_{nid}.csv", m) if (base_dir / f"baseline_{nid}.csv").exists() else float("nan")
-            e = _mean_col_csv(eval_dir / f"eval_{nid}.csv", m) if (eval_dir / f"eval_{nid}.csv").exists() else float("nan")
+            b = (
+                _mean_col_csv(base_dir / f"baseline_{nid}.csv", m)
+                if (base_dir / f"baseline_{nid}.csv").exists()
+                else float("nan")
+            )
+            e = (
+                _mean_col_csv(eval_dir / f"eval_{nid}.csv", m)
+                if (eval_dir / f"eval_{nid}.csv").exists()
+                else float("nan")
+            )
             if np.isfinite(b) and np.isfinite(e) and b != 0.0:
                 node_stats[f"{m}_baseline"] = b
                 node_stats[f"{m}_eval"] = e
@@ -58,9 +78,11 @@ def _compute_uplift(run_dir: Path, metrics=("halt", "count", "speed")) -> Dict[s
         out[nid] = node_stats
     return out
 
+
 def _print_uplift(uplift: Dict[str, Dict[str, float]]) -> None:
-    def fmt(x): 
+    def fmt(x):
         return "n/a" if not np.isfinite(x) else f"{x:8.3f}"
+
     for nid in sorted(uplift):
         s = uplift[nid]
         line = [
@@ -77,6 +99,7 @@ def _print_uplift(uplift: Dict[str, Dict[str, float]]) -> None:
 
 def _save_node_csv(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str) -> None:
     import csv
+
     out_dir.mkdir(parents=True, exist_ok=True)
     for nid, d in ts.items():
         p = out_dir / f"{prefix}_{nid}.csv"
@@ -96,7 +119,9 @@ def _save_node_csv(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str) -
                 w.writerow(row)
 
 
-def _plot_timeseries(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str, show: bool) -> None:
+def _plot_timeseries(
+    ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str, show: bool
+) -> None:
 
     import matplotlib.pyplot as plt
 
@@ -106,9 +131,13 @@ def _plot_timeseries(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str,
     for nid, d in ts.items():
         t = np.asarray(d["t"])
         fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
-        axes[0].plot(t, d["halt"]);  axes[0].set_ylabel("halt")
-        axes[1].plot(t, d["count"]); axes[1].set_ylabel("count")
-        axes[2].plot(t, d["speed"]); axes[2].set_ylabel("speed"); axes[2].set_xlabel("time [s]")
+        axes[0].plot(t, d["halt"])
+        axes[0].set_ylabel("halt")
+        axes[1].plot(t, d["count"])
+        axes[1].set_ylabel("count")
+        axes[2].plot(t, d["speed"])
+        axes[2].set_ylabel("speed")
+        axes[2].set_xlabel("time [s]")
         fig.suptitle(f"{prefix} — {nid}")
         fig.tight_layout()
         fig.savefig(out_dir / f"{prefix}_{nid}.png", dpi=150)
@@ -121,8 +150,9 @@ def _plot_timeseries(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str,
         for nid, d in ts.items():
             ax.plot(d["t"], d[m], label=nid)
         ax.set_title(f"{prefix} — {m}")
-        ax.set_xlabel("time [s]"); ax.set_ylabel(m)
-        ax.legend(ncol=max(1, len(ts)//3))
+        ax.set_xlabel("time [s]")
+        ax.set_ylabel(m)
+        ax.legend(ncol=max(1, len(ts) // 3))
         fig.tight_layout()
         fig.savefig(out_dir / f"{prefix}_overlay_{m}.png", dpi=150)
         if show:
@@ -136,21 +166,23 @@ def _plot_timeseries(ts: Dict[str, Dict[str, list]], out_dir: Path, prefix: str,
         fig, ax = plt.subplots(figsize=(10, 4))
         for nid, d in ts.items():
             if "reward" in d and d["reward"]:
-                ax.plot(d["t"][:len(d["reward"])], d["reward"], label=f"{nid} reward")
+                ax.plot(d["t"][: len(d["reward"])], d["reward"], label=f"{nid} reward")
         ax.set_title(f"{prefix} — reward")
-        ax.set_xlabel("time [s]"); ax.set_ylabel("reward")
-        ax.legend(ncol=max(1, len(ts)//3))
+        ax.set_xlabel("time [s]")
+        ax.set_ylabel("reward")
+        ax.legend(ncol=max(1, len(ts) // 3))
         fig.tight_layout()
         fig.savefig(out_dir / f"{prefix}_overlay_reward.png", dpi=150)
         if show:
             import matplotlib.pyplot as plt
+
             plt.show()
         else:
             plt.close(fig)
 
 
-
 # --------------------- optional Maskable wrapper ---------------------
+
 
 def maybe_mask_env(env, agent):
     try:
@@ -166,7 +198,9 @@ def maybe_mask_env(env, agent):
         # sanity: match action space size
         if mask.size != e.action_space.n:
             # pick your policy: raise, or pad/truncate. I’d rather fail fast:
-            raise ValueError(f"Action mask length {mask.size} != action space {e.action_space.n}")
+            raise ValueError(
+                f"Action mask length {mask.size} != action space {e.action_space.n}"
+            )
         return mask
 
     return ActionMasker(env, mask_fn)
@@ -174,7 +208,10 @@ def maybe_mask_env(env, agent):
 
 # --------------------- Baseline (fixed TLS) ---------------------
 
-def run_baseline(sumocfg: str, nodes_yaml: str, nodes: Iterable[str]) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, list]]]:
+
+def run_baseline(
+    sumocfg: str, nodes_yaml: str, nodes: Iterable[str]
+) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, list]]]:
     start_sumo(sumocfg, gui=True)
     bus = CommunicationBus(retain_last=True)
     print("Building baseline env from YAML")
@@ -184,10 +221,10 @@ def run_baseline(sumocfg: str, nodes_yaml: str, nodes: Iterable[str]) -> Tuple[D
     # time-series
     ts = {nid: dict(t=[], halt=[], count=[], speed=[]) for nid in nodes}
 
-    t_now = float(traci.simulation.getTime()) # type: ignore
+    t_now = float(traci.simulation.getTime())  # type: ignore
     print("Starting baseline loop")
-    while traci.simulation.getMinExpectedNumber() > 0 and t_now < 64000: # type: ignore
-        t_now = float(traci.simulation.getTime()) # type: ignore
+    while traci.simulation.getMinExpectedNumber() > 0 and t_now < 64000:  # type: ignore
+        t_now = float(traci.simulation.getTime())  # type: ignore
         for nid, agent in agents.items():
             Din, _ = build_matrices(agent, agent.detector_reader)
             if Din.numel():
@@ -212,9 +249,18 @@ def run_baseline(sumocfg: str, nodes_yaml: str, nodes: Iterable[str]) -> Tuple[D
 
 # --------------------- Train per-agent ---------------------
 
-def train_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
-                 total_timesteps: int, ticks_per_decision: int, out_dir: Path,
-                 *, tensorboard: bool = False, progress: bool = False) -> None:
+
+def train_agents(
+    sumocfg: str,
+    nodes_yaml: str,
+    nodes: Iterable[str],
+    total_timesteps: int,
+    ticks_per_decision: int,
+    out_dir: Path,
+    *,
+    tensorboard: bool = False,
+    progress: bool = False,
+) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     tb_root = out_dir / "tb" if tensorboard else None
 
@@ -232,13 +278,16 @@ def train_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
         tb_name = None
         if tensorboard:
             from stable_baselines3.common.logger import configure
-            logdir = (tb_root / nid) # type: ignore
+
+            logdir = tb_root / nid  # type: ignore
             logdir.mkdir(parents=True, exist_ok=True)
             new_logger = configure(str(logdir), ["stdout", "csv", "tensorboard"])
-            policy.model.set_logger(new_logger) # type: ignore
+            policy.model.set_logger(new_logger)  # type: ignore
             tb_name = nid  # run name in TensorBoard
 
-        policy.learn(total_timesteps=total_timesteps, tb_log_name=tb_name, progress_bar=progress)
+        policy.learn(
+            total_timesteps=total_timesteps, tb_log_name=tb_name, progress_bar=progress
+        )
         policy._save(str(out_dir / f"{nid}_sb3.zip"))
 
         _dump_history_from_agent(agent, out_dir / f"{nid}_train_history.csv")
@@ -247,26 +296,42 @@ def train_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
 
 def _dump_history_from_agent(agent, path: Path) -> None:
     import csv
+
     m = agent.metrics_snapshot()
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["t", "action", "phase", "reward", "loss"])
-        L = max(len(m["t"]), len(m["action"]), len(m["phase"]), len(m["reward"]), len(m["loss"]))
+        L = max(
+            len(m["t"]),
+            len(m["action"]),
+            len(m["phase"]),
+            len(m["reward"]),
+            len(m["loss"]),
+        )
         for i in range(L):
-            w.writerow([
-                float(m["t"][i]) if i < len(m["t"]) else "",
-                float(m["action"][i]) if i < len(m["action"]) else "",
-                float(m["phase"][i]) if i < len(m["phase"]) else "",
-                float(m["reward"][i]) if i < len(m["reward"]) else "",
-                float(m["loss"][i]) if i < len(m["loss"]) else "",
-            ])
+            w.writerow(
+                [
+                    float(m["t"][i]) if i < len(m["t"]) else "",
+                    float(m["action"][i]) if i < len(m["action"]) else "",
+                    float(m["phase"][i]) if i < len(m["phase"]) else "",
+                    float(m["reward"][i]) if i < len(m["reward"]) else "",
+                    float(m["loss"][i]) if i < len(m["loss"]) else "",
+                ]
+            )
 
 
 # --------------------- Evaluate trained jointly ---------------------
 
-def evaluate_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
-                    ticks_per_decision: int, seconds: float, ckpt_dir: Path) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, list]]]:
+
+def evaluate_agents(
+    sumocfg: str,
+    nodes_yaml: str,
+    nodes: Iterable[str],
+    ticks_per_decision: int,
+    seconds: float,
+    ckpt_dir: Path,
+) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, list]]]:
     start_sumo(sumocfg, gui=True)
     bus = CommunicationBus(retain_last=True)
     env_map = build_envs_from_yaml(nodes_yaml, bus)
@@ -292,17 +357,16 @@ def evaluate_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
         env = IntersectionEnv(agent, ticks_per_decision=ticks_per_decision)
         env = maybe_mask_env(env, agent)
         policy.set_env(env)
-        env_map[nid] = (env, agent, policy) # type: ignore
+        env_map[nid] = (env, agent, policy)  # type: ignore
 
     # time-series
     ts = {nid: dict(t=[], halt=[], count=[], speed=[], reward=[]) for nid in nodes}
 
-    t0 = float(traci.simulation.getTime()) # type: ignore
-    while (float(traci.simulation.getTime()) - t0) < seconds and traci.simulation.getMinExpectedNumber() > 0: # type: ignore
+    t0 = float(traci.simulation.getTime())  # type: ignore
+    while (float(traci.simulation.getTime()) - t0) < seconds and traci.simulation.getMinExpectedNumber() > 0:  # type: ignore
         # one decision for each agent
         for nid in nodes:
             out = env_map[nid][1].step(deterministic=True)  # agent.step()
-
 
         # advance remaining ticks in this decision interval
         for _ in range(max(1, ticks_per_decision)):
@@ -313,7 +377,7 @@ def evaluate_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
                 env_map[nid][1].action.tick()
 
         # sample metrics at decision boundary
-        t_now = float(traci.simulation.getTime()) # type: ignore
+        t_now = float(traci.simulation.getTime())  # type: ignore
         for nid in nodes:
             agent = env_map[nid][1]
             Din, _ = build_matrices(agent, agent.detector_reader)
@@ -342,24 +406,43 @@ def evaluate_agents(sumocfg: str, nodes_yaml: str, nodes: Iterable[str],
 
 # --------------------- CLI ---------------------
 
+
 def main():
-    ap = argparse.ArgumentParser(description="Baseline, train and evaluate with time-series and plots")
+    ap = argparse.ArgumentParser(
+        description="Baseline, train and evaluate with time-series and plots"
+    )
     ap.add_argument("--sumocfg", required=True, help="Path to .sumocfg")
     ap.add_argument("--yaml", required=True, help="Path to nodes.yaml")
-    ap.add_argument("--nodes", nargs="*", default=None, help="Subset of node_ids (default: all in yaml)")
-    ap.add_argument("--mode", choices=["baseline", "train", "eval", "all"], default="all")
-    ap.add_argument("--seconds", type=float, default=1800.0, help="Eval duration in seconds")
-    ap.add_argument("--ticks-per-decision", type=int, default=5, help="SUMO ticks per RL decision")
-    ap.add_argument("--timesteps", type=int, default=100_000, help="SB3 total_timesteps per agent")
+    ap.add_argument(
+        "--nodes",
+        nargs="*",
+        default=None,
+        help="Subset of node_ids (default: all in yaml)",
+    )
+    ap.add_argument(
+        "--mode", choices=["baseline", "train", "eval", "all"], default="all"
+    )
+    ap.add_argument(
+        "--seconds", type=float, default=1800.0, help="Eval duration in seconds"
+    )
+    ap.add_argument(
+        "--ticks-per-decision", type=int, default=5, help="SUMO ticks per RL decision"
+    )
+    ap.add_argument(
+        "--timesteps", type=int, default=100_000, help="SB3 total_timesteps per agent"
+    )
     ap.add_argument("--out", default="runs", help="Output directory")
     ap.add_argument("--show", action="store_true", help="Display plots at the end")
-    ap.add_argument("--tensorboard", action="store_true", help="Log SB3 to OUT/tb for TensorBoard")
-    ap.add_argument("--progress", action="store_true", help="Show SB3 learn() progress bar")
+    ap.add_argument(
+        "--tensorboard", action="store_true", help="Log SB3 to OUT/tb for TensorBoard"
+    )
+    ap.add_argument(
+        "--progress", action="store_true", help="Show SB3 learn() progress bar"
+    )
     args = ap.parse_args()
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-
 
     with open(args.yaml, "r") as f:
         y = yaml.safe_load(f)
@@ -369,7 +452,9 @@ def main():
         print("[baseline] running fixed TLS...")
         summary, ts = run_baseline(args.sumocfg, args.yaml, run_nodes)
         (out_dir / "baseline").mkdir(parents=True, exist_ok=True)
-        (out_dir / "baseline" / "summary.json").write_text(json.dumps(summary, indent=2))
+        (out_dir / "baseline" / "summary.json").write_text(
+            json.dumps(summary, indent=2)
+        )
         _save_node_csv(ts, out_dir / "baseline", "baseline")
         _plot_timeseries(ts, out_dir / "baseline", "baseline", show=args.show)
         print("[baseline] saved to", out_dir / "baseline")
@@ -377,14 +462,26 @@ def main():
     if args.mode in ("train", "all"):
         print("[train] training agents:", ", ".join(run_nodes))
         train_agents(
-            args.sumocfg, args.yaml, run_nodes, args.timesteps, args.ticks_per_decision, out_dir / "ckpts",
-            tensorboard=args.tensorboard, progress=args.progress
+            args.sumocfg,
+            args.yaml,
+            run_nodes,
+            args.timesteps,
+            args.ticks_per_decision,
+            out_dir / "ckpts",
+            tensorboard=args.tensorboard,
+            progress=args.progress,
         )
-
 
     if args.mode in ("eval", "all"):
         print("[eval] evaluating trained agents jointly...")
-        summary, ts = evaluate_agents(args.sumocfg, args.yaml, run_nodes, args.ticks_per_decision, args.seconds, out_dir / "ckpts")
+        summary, ts = evaluate_agents(
+            args.sumocfg,
+            args.yaml,
+            run_nodes,
+            args.ticks_per_decision,
+            args.seconds,
+            out_dir / "ckpts",
+        )
         (out_dir / "eval").mkdir(parents=True, exist_ok=True)
         (out_dir / "eval" / "summary.json").write_text(json.dumps(summary, indent=2))
         _save_node_csv(ts, out_dir / "eval", "eval")

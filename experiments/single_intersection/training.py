@@ -35,7 +35,7 @@ model = PPO(
     ent_coef=0.01,
     clip_range=0.2,
     n_epochs=10,
-    tensorboard_log="./ppo_sumo_tensorboard/"
+    tensorboard_log="./ppo_sumo_tensorboard/",
 )
 
 # Train agent

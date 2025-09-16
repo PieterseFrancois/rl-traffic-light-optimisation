@@ -11,7 +11,7 @@ from .embedder import LaneSetAttentionEmbedder, EmbedderHyperparameters
 class FeatureExtractorConfig:
     """
     Configuration for the SB3-compatible feature extractor.
-    
+
     Attributes:
         number_of_features (int): Number of features per lane (F).
         embedder_hyperparams (EmbedderHyperparameters): Hyperparameters for the LaneSetAttentionEmbedder.
@@ -33,15 +33,11 @@ class FeatureExtractor(BaseFeaturesExtractor):
     IMPORTANT: This class lives inside the policy, so its parameters are trained end-to-end via PPO.
     """
 
-    def __init__(
-        self,
-        observation_space: spaces.Box,
-        config: FeatureExtractorConfig
-    ):
+    def __init__(self, observation_space: spaces.Box, config: FeatureExtractorConfig):
         # Must call super with the output vector length (policy expects this)
         super().__init__(
             observation_space=observation_space,
-            features_dim=config.embedder_hyperparams.output_vector_length
+            features_dim=config.embedder_hyperparams.output_vector_length,
         )
 
         self.number_of_features = config.number_of_features

@@ -42,8 +42,10 @@ class _FakeSimulation:
 class _FakeTLS:
     def __init__(self):
         self._phase = 0
-        self._phase_duration = 0.0  # remaining duration for current special state (amber/all-red)
-        self._ryg_state = "ggrr"    # default current state (2 green, 2 red) for amber-from-current tests
+        self._phase_duration = (
+            0.0  # remaining duration for current special state (amber/all-red)
+        )
+        self._ryg_state = "ggrr"  # default current state (2 green, 2 red) for amber-from-current tests
         # Shape only; some code inspects length of phases
         self._program_logics = [{"phases": [0, 1, 2, 3]}]
 

@@ -122,15 +122,25 @@ class LaneSetAttentionEmbedder(nn.Module):
     def _validate_hyperparameters(self, hyperparams: EmbedderHyperparameters) -> None:
         """Validate hyperparameters for the embedder."""
         if hyperparams.num_seeds < 1:
-            raise ValueError("Invalid Embedder Hyperparameter: num_seeds must be at least 1")
+            raise ValueError(
+                "Invalid Embedder Hyperparameter: num_seeds must be at least 1"
+            )
         if hyperparams.intermediate_vector_length < 1:
-            raise ValueError("Invalid Embedder Hyperparameter: intermediate_vector_length must be at least 1")
+            raise ValueError(
+                "Invalid Embedder Hyperparameter: intermediate_vector_length must be at least 1"
+            )
         if hyperparams.output_vector_length < 1:
-            raise ValueError("Invalid Embedder Hyperparameter: output_vector_length must be at least 1")
+            raise ValueError(
+                "Invalid Embedder Hyperparameter: output_vector_length must be at least 1"
+            )
         if hyperparams.post_aggregation_hidden_length < 1:
-            raise ValueError("Invalid Embedder Hyperparameter: post_aggregation_hidden_length must be at least 1")
+            raise ValueError(
+                "Invalid Embedder Hyperparameter: post_aggregation_hidden_length must be at least 1"
+            )
         if not (0.0 <= hyperparams.dropout < 1.0):
-            raise ValueError("Invalid Embedder Hyperparameter: dropout must be in the range [0.0, 1.0)")
+            raise ValueError(
+                "Invalid Embedder Hyperparameter: dropout must be in the range [0.0, 1.0)"
+            )
 
     def forward(self, X: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """

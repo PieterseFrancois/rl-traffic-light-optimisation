@@ -11,12 +11,12 @@ import traci
 @dataclass
 class ActionRecord:
     sim_time: float
-    event: str                     # "apply", "skip_min_green",
-                                   # "amber_start", "amber_done",
-                                   # "all_red_start", "all_red_done",
-                                   # "warn_clamp_phase", "warn_reset_program"
-    action: Optional[int] = None   # RL action index (if applicable)
-    phase: Optional[int] = None    # TLS phase index after the call (if set)
+    event: str  # "apply", "skip_min_green",
+    # "amber_start", "amber_done",
+    # "all_red_start", "all_red_done",
+    # "warn_clamp_phase", "warn_reset_program"
+    action: Optional[int] = None  # RL action index (if applicable)
+    phase: Optional[int] = None  # TLS phase index after the call (if set)
     note: str = ""
 
 
@@ -49,8 +49,12 @@ class DirectPhaseIndexActionModule:
         buffer_capacity: int = 256,
     ):
         self.tls_id = tls_id
-        self.map: List[int] | None = list(action_to_phase_index) if action_to_phase_index is not None else None
-        self.map_state: List[str] | None = list(action_to_state_str) if action_to_state_str is not None else None
+        self.map: List[int] | None = (
+            list(action_to_phase_index) if action_to_phase_index is not None else None
+        )
+        self.map_state: List[str] | None = (
+            list(action_to_state_str) if action_to_state_str is not None else None
+        )
         if (self.map is None) and (self.map_state is None):
             raise ValueError("Provide action_to_phase_index or action_to_state_str")
 
@@ -67,13 +71,13 @@ class DirectPhaseIndexActionModule:
         except Exception:
             self._phase_enter_time = 0.0
         try:
-            self._last_phase: int = int(traci.trafficlight.getPhase(self.tls_id)) # type: ignore
+            self._last_phase: int = int(traci.trafficlight.getPhase(self.tls_id))  # type: ignore
         except Exception:
             self._last_phase = 0
 
         # Handover tracking
         self._pending_target_action: Optional[int] = None  # remember action index
-        self._handover_stage: Optional[str] = None         # None | "amber" | "all_red"
+        self._handover_stage: Optional[str] = None  # None | "amber" | "all_red"
         self._handover_until: Optional[float] = None
         self._amber_cached: Optional[str] = None
 
@@ -87,7 +91,7 @@ class DirectPhaseIndexActionModule:
         # Remember a base program for index-based fallback
         self._base_program: Optional[str] = None
         try:
-            self._base_program = traci.trafficlight.getProgram(self.tls_id) # type: ignore
+            self._base_program = traci.trafficlight.getProgram(self.tls_id)  # type: ignore
         except Exception:
             pass
 
@@ -99,8 +103,14 @@ class DirectPhaseIndexActionModule:
         except Exception:
             return 0.0
 
-    def _record(self, event: str, *, action: Optional[int] = None,
-                phase: Optional[int] = None, note: str = "") -> None:
+    def _record(
+        self,
+        event: str,
+        *,
+        action: Optional[int] = None,
+        phase: Optional[int] = None,
+        note: str = "",
+    ) -> None:
         self.buffer.append(ActionRecord(self._now(), event, action, phase, note))
 
     def _amber_from_current(self) -> str:
@@ -112,7 +122,9 @@ class DirectPhaseIndexActionModule:
     def _all_red_state(self) -> str:
         if self._n_signals <= 0:
             try:
-                self._n_signals = len(traci.trafficlight.getRedYellowGreenState(self.tls_id))
+                self._n_signals = len(
+                    traci.trafficlight.getRedYellowGreenState(self.tls_id)
+                )
             except Exception:
                 self._n_signals = 0
         return "r" * max(0, self._n_signals)
@@ -123,7 +135,7 @@ class DirectPhaseIndexActionModule:
         """Re-activate the base TLS program if available."""
         if not self._base_program:
             try:
-                self._base_program = traci.trafficlight.getProgram(self.tls_id) # type: ignore
+                self._base_program = traci.trafficlight.getProgram(self.tls_id)  # type: ignore
             except Exception:
                 return
         try:
@@ -181,7 +193,7 @@ class DirectPhaseIndexActionModule:
 
         if time_in_phase < self.enforce_min_green_s:
             if self.map is not None:
-                current = int(traci.trafficlight.getPhase(self.tls_id)) # type: ignore
+                current = int(traci.trafficlight.getPhase(self.tls_id))  # type: ignore
                 allowed = [i for i, p in enumerate(self.map) if p == current]
             else:
                 cur = traci.trafficlight.getRedYellowGreenState(self.tls_id)
@@ -207,13 +219,21 @@ class DirectPhaseIndexActionModule:
                 st = self._amber_cached or self._amber_from_current()
                 traci.trafficlight.setRedYellowGreenState(self.tls_id, st)
             elif self._handover_stage == "all_red":
-                traci.trafficlight.setRedYellowGreenState(self.tls_id, self._all_red_state())
+                traci.trafficlight.setRedYellowGreenState(
+                    self.tls_id, self._all_red_state()
+                )
             return
 
         # Deadline reached -> advance
         a = int(self._pending_target_action)
-        if self._handover_stage == "amber" and self.all_red_after_amber and self.all_red_duration_s > 0.0:
-            traci.trafficlight.setRedYellowGreenState(self.tls_id, self._all_red_state())
+        if (
+            self._handover_stage == "amber"
+            and self.all_red_after_amber
+            and self.all_red_duration_s > 0.0
+        ):
+            traci.trafficlight.setRedYellowGreenState(
+                self.tls_id, self._all_red_state()
+            )
             self._handover_stage = "all_red"
             self._handover_until = now + self.all_red_duration_s
             self._phase_enter_time = now
@@ -227,7 +247,7 @@ class DirectPhaseIndexActionModule:
             target_phase = int(self.map[a])  # type: ignore[index]
             target_phase = self._safe_set_phase(target_phase)
 
-        self._last_phase = int(traci.trafficlight.getPhase(self.tls_id)) # type: ignore
+        self._last_phase = int(traci.trafficlight.getPhase(self.tls_id))  # type: ignore
         self._phase_enter_time = now
         evt = "all_red_done" if self._handover_stage == "all_red" else "amber_done"
         self._pending_target_action = None
@@ -250,19 +270,27 @@ class DirectPhaseIndexActionModule:
             raise ValueError(f"Action {action} out of range [0, {n_actions - 1}]")
 
         if self._pending_target_action is not None:
-            self._record("apply", action=action, note=f"waiting_{self._handover_stage or 'handover'}")
+            self._record(
+                "apply",
+                action=action,
+                note=f"waiting_{self._handover_stage or 'handover'}",
+            )
             return
 
         if self.map is not None:
-            current = int(traci.trafficlight.getPhase(self.tls_id)) # type: ignore
-            target_same = (int(self.map[action]) == current)
+            current = int(traci.trafficlight.getPhase(self.tls_id))  # type: ignore
+            target_same = int(self.map[action]) == current
         else:
             cur = traci.trafficlight.getRedYellowGreenState(self.tls_id)
-            target_same = ((self.map_state or [])[action] == cur)
+            target_same = (self.map_state or [])[action] == cur
 
         if target_same:
-            self._record("apply", action=action, phase=int(traci.trafficlight.getPhase(self.tls_id)), # type: ignore
-                         note="noop_same_phase_or_state")
+            self._record(
+                "apply",
+                action=action,
+                phase=int(traci.trafficlight.getPhase(self.tls_id)),  # type: ignore
+                note="noop_same_phase_or_state",
+            )
             return
 
         if self.enforce_min_green_s > 0.0:
@@ -271,7 +299,7 @@ class DirectPhaseIndexActionModule:
                 self._record(
                     "skip_min_green",
                     action=action,
-                    phase=int(traci.trafficlight.getPhase(self.tls_id)), # type: ignore
+                    phase=int(traci.trafficlight.getPhase(self.tls_id)),  # type: ignore
                     note=f"time_in_phase={time_in_phase:.2f}s < {self.enforce_min_green_s:.2f}s",
                 )
                 return
@@ -285,28 +313,38 @@ class DirectPhaseIndexActionModule:
             now = self._now()
             self._handover_until = now + self.amber_duration_s
             self._phase_enter_time = now
-            self._record("amber_start", action=action, note=f"dur={self.amber_duration_s}s")
+            self._record(
+                "amber_start", action=action, note=f"dur={self.amber_duration_s}s"
+            )
             return
 
         # All-red without amber
         if self.all_red_after_amber and self.all_red_duration_s > 0.0:
-            traci.trafficlight.setRedYellowGreenState(self.tls_id, self._all_red_state())
+            traci.trafficlight.setRedYellowGreenState(
+                self.tls_id, self._all_red_state()
+            )
             self._pending_target_action = int(action)
             self._handover_stage = "all_red"
             now = self._now()
             self._handover_until = now + self.all_red_duration_s
             self._phase_enter_time = now
-            self._record("all_red_start", action=action, note=f"dur={self.all_red_duration_s}s")
+            self._record(
+                "all_red_start", action=action, note=f"dur={self.all_red_duration_s}s"
+            )
             return
 
         # Immediate switch to final
         if self.map_state is not None:
-            traci.trafficlight.setRedYellowGreenState(self.tls_id, self.map_state[action])
+            traci.trafficlight.setRedYellowGreenState(
+                self.tls_id, self.map_state[action]
+            )
         else:
             self._safe_set_phase(int(self.map[action]))  # type: ignore[index]
-        self._last_phase = int(traci.trafficlight.getPhase(self.tls_id)) # type: ignore
+        self._last_phase = int(traci.trafficlight.getPhase(self.tls_id))  # type: ignore
         self._phase_enter_time = self._now()
-        self._record("apply", action=action, phase=self._last_phase, note="immediate_switch")
+        self._record(
+            "apply", action=action, phase=self._last_phase, note="immediate_switch"
+        )
 
     # ----------------------------- utilities --------------------------------
 

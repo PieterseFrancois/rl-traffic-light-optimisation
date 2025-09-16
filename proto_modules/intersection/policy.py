@@ -20,7 +20,6 @@ from stable_baselines3 import PPO
 from sb3_contrib import MaskablePPO
 
 
-
 from .features_extractor import NeighbourGNNFeatures
 
 
@@ -63,7 +62,9 @@ class SB3PolicyModule:
         # validate algo choice
         if algo_name not in ALGOS or ALGOS[algo_name] is None:
             available = [k for k, v in ALGOS.items() if v is not None]
-            raise ValueError(f"Unknown or unavailable algo '{algo_name}'. Available: {available}")
+            raise ValueError(
+                f"Unknown or unavailable algo '{algo_name}'. Available: {available}"
+            )
 
         self._algo_name = algo_name
         self._extractor_kwargs = extractor_kwargs or {}
@@ -88,7 +89,11 @@ class SB3PolicyModule:
         return pk
 
     def _policy_name_for(self, env: gym.Env) -> str:
-        return "MultiInputPolicy" if isinstance(env.observation_space, gym.spaces.Dict) else "MlpPolicy"
+        return (
+            "MultiInputPolicy"
+            if isinstance(env.observation_space, gym.spaces.Dict)
+            else "MlpPolicy"
+        )
 
     def set_env(self, env: gym.Env) -> None:
         """Bind or swap the SB3 env. Creates the underlying SB3 model on first call."""
@@ -122,7 +127,9 @@ class SB3PolicyModule:
     def _save(self, path: str) -> None:
         """Save SB3 zip at path (native SB3 format)."""
         if self.model is None:
-            raise RuntimeError("Nothing to save; model not built. Call set_env(env) first.")
+            raise RuntimeError(
+                "Nothing to save; model not built. Call set_env(env) first."
+            )
         self.model.save(path)
 
     @classmethod

@@ -3,10 +3,12 @@ import random
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from modules import lane_metrics, plotting
 from modules.metrics_structs import SingleIntersectionMetrics
+
 
 def _setup_random_arrivals(num_vehicles=60):
     """Vehicles depart randomly from all directions with jittered timing."""

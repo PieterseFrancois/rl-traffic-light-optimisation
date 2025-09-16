@@ -27,12 +27,14 @@ from modules.intersection.features_extractor import NeighbourGNNFeatures
 # Minimal single-agent env
 # ------------------------
 
+
 class _TinyIntersectionEnv(gym.Env):
     """
     Minimal env for one intersection.
     - Fixed neighbour count K for this agent (fits SB3's fixed-shape requirement).
     - Publishes zero vector for missing neighbours naturally if you choose to.
     """
+
     metadata = {"render_modes": []}
 
     def __init__(self, F_raw=6, K=2, D_emb=8, A=3, horizon=10, seed=123):
@@ -42,10 +44,16 @@ class _TinyIntersectionEnv(gym.Env):
         self.rng = np.random.default_rng(seed)
         self.t = 0
 
-        self.observation_space = gym.spaces.Dict({
-            "self_raw": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32),
-            "nbr_embed": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(K, D_emb), dtype=np.float32),
-        })
+        self.observation_space = gym.spaces.Dict(
+            {
+                "self_raw": gym.spaces.Box(
+                    low=-np.inf, high=np.inf, shape=(F_raw,), dtype=np.float32
+                ),
+                "nbr_embed": gym.spaces.Box(
+                    low=-np.inf, high=np.inf, shape=(K, D_emb), dtype=np.float32
+                ),
+            }
+        )
         self.action_space = gym.spaces.Discrete(A)
 
     def _obs(self):
@@ -82,7 +90,7 @@ EXTRACTOR_KW = dict(
     embed_dim=D_EMB,
     gat_hidden=16,
     gat_heads=2,
-    edge_index=None,           # default star (0 <-> i)
+    edge_index=None,  # default star (0 <-> i)
     device=torch.device("cpu"),
 )
 
@@ -90,6 +98,7 @@ EXTRACTOR_KW = dict(
 # -----------
 # The tests
 # -----------
+
 
 @pytest.fixture(autouse=True)
 def _seed_all():
@@ -108,7 +117,7 @@ def test_init_and_predict(algo_name):
         algo_name=algo_name,
         extractor_kwargs=EXTRACTOR_KW,
         net_arch=dict(pi=[32], vf=[32]),
-        algo_kwargs=dict(n_steps=8, batch_size=8),   # light
+        algo_kwargs=dict(n_steps=8, batch_size=8),  # light
         device="cpu",
         verbose=0,
     )
@@ -126,13 +135,15 @@ def test_learn_short_run(algo_name):
     2) A short learn() run executes without error (sanity check training path).
     For MaskablePPO, wrap the env with ActionMasker providing a boolean mask.
     """
-    base_env = _TinyIntersectionEnv(F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=8)
+    base_env = _TinyIntersectionEnv(
+        F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=8
+    )
 
     if algo_name == "MaskablePPO":
         from sb3_contrib.common.wrappers.action_masker import ActionMasker
 
         def mask_fn(_obs):
-            return np.ones(base_env.action_space.n, dtype=bool) # type: ignore
+            return np.ones(base_env.action_space.n, dtype=bool)  # type: ignore
 
         env = ActionMasker(base_env, mask_fn)
     else:
@@ -155,7 +166,9 @@ def test_save_and_load_roundtrip(tmp_path, algo_name):
     """
     3) Save/Load preserves deterministic predict output on the same observation.
     """
-    env = _TinyIntersectionEnv(F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=5, seed=321)
+    env = _TinyIntersectionEnv(
+        F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=5, seed=321
+    )
     policy = SB3PolicyModule(
         env=env,
         algo_name=algo_name,
@@ -184,8 +197,9 @@ def test_save_and_load_roundtrip(tmp_path, algo_name):
     )
 
     act_after, _ = policy2.predict(obs, deterministic=True)
-    assert int(np.asarray(act_before).squeeze()) == int(np.asarray(act_after).squeeze()), \
-        "Deterministic action should match after load"
+    assert int(np.asarray(act_before).squeeze()) == int(
+        np.asarray(act_after).squeeze()
+    ), "Deterministic action should match after load"
 
 
 @pytest.mark.parametrize("algo_name", ["PPO"])
@@ -262,10 +276,12 @@ def test_maskableppo_smoke_with_trivial_mask():
     """
     from sb3_contrib.common.wrappers.action_masker import ActionMasker
 
-    base_env = _TinyIntersectionEnv(F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=5)
+    base_env = _TinyIntersectionEnv(
+        F_raw=F_RAW, K=K_NEI, D_emb=D_EMB, A=N_ACT, horizon=5
+    )
 
     def mask_fn(_obs):
-        return np.ones(base_env.action_space.n, dtype=bool) # type: ignore
+        return np.ones(base_env.action_space.n, dtype=bool)  # type: ignore
 
     env = ActionMasker(base_env, mask_fn)
     policy = SB3PolicyModule(
@@ -303,4 +319,6 @@ def test_extractor_wiring_is_neighbour_gnn():
     # Inspect the extractor instance
     assert policy.model is not None
     fx = policy.model.policy.features_extractor  # type: ignore[attr-defined]
-    assert isinstance(fx, NeighbourGNNFeatures), "Expected NeighbourGNNFeatures as the extractor"
+    assert isinstance(
+        fx, NeighbourGNNFeatures
+    ), "Expected NeighbourGNNFeatures as the extractor"

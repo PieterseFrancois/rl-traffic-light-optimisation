@@ -54,10 +54,14 @@ class CommunicationBus:
         with self._lock:
             self._subs.setdefault(publisher_id, {})[subscriber_id] = callback
             self._subs_by_sub.setdefault(subscriber_id, set()).add(publisher_id)
-            if (self._retain_last if replay_last is None else replay_last) and publisher_id in self._last:
+            if (
+                self._retain_last if replay_last is None else replay_last
+            ) and publisher_id in self._last:
                 # Call outside lock to avoid re-entrancy surprises
                 last = self._last[publisher_id].copy()
-        if (self._retain_last if replay_last is None else replay_last) and publisher_id in self._last:
+        if (
+            self._retain_last if replay_last is None else replay_last
+        ) and publisher_id in self._last:
             callback(publisher_id, last)
 
     def unsubscribe_embeddings(self, subscriber_id: str, publisher_id: str) -> None:

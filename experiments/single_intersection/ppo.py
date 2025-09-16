@@ -4,12 +4,13 @@ import traci
 import random
 import numpy as np
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from stable_baselines3 import PPO
 from modules import lane_metrics, plotting
 from modules.metrics_structs import SingleIntersectionMetrics
 from sumo_traffic_env import SumoTrafficEnv  # Your gym.Env wrapper
+
 
 def run():
     MODEL_PATH = "experiments/single_intersection/ppo_traffic_model_single_intersection"
@@ -26,7 +27,6 @@ def run():
         action, _ = model.predict(obs, deterministic=True)
         obs, reward, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
-
 
         if done:
             break
@@ -63,9 +63,15 @@ def run():
 
     # Plotting
     plotting.init_plot_layout(num_subplots=3)
-    plotting.plot_lane_metrics(data.steps, data.wait, data.phases, "PPO Light: Wait Time", "Seconds", [0], [1])
-    plotting.plot_lane_metrics(data.steps, data.speed, data.phases, "PPO Light: Speed", "m/s", [0], [1])
-    plotting.plot_lane_metrics(data.steps, data.queue, data.phases, "PPO Light: Queue", "Vehicles", [0], [1])
+    plotting.plot_lane_metrics(
+        data.steps, data.wait, data.phases, "PPO Light: Wait Time", "Seconds", [0], [1]
+    )
+    plotting.plot_lane_metrics(
+        data.steps, data.speed, data.phases, "PPO Light: Speed", "m/s", [0], [1]
+    )
+    plotting.plot_lane_metrics(
+        data.steps, data.queue, data.phases, "PPO Light: Queue", "Vehicles", [0], [1]
+    )
     plotting.show_plots()
 
 

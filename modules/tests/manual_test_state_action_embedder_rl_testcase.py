@@ -44,8 +44,12 @@ from modules.intersection.reward import (
 )
 
 # NEW: import your SB3 feature extractor that wraps the embedder
-from modules.intersection.feature_extractor.feature_extractor import FeatureExtractor, FeatureExtractorConfig
+from modules.intersection.feature_extractor.feature_extractor import (
+    FeatureExtractor,
+    FeatureExtractorConfig,
+)
 from modules.intersection.feature_extractor.embedder import EmbedderHyperparameters
+
 
 # ============================================================
 #                        Utilities
@@ -132,7 +136,9 @@ class SingleTLSEnv(gym.Env):
         self.episode_seconds = float(episode_seconds)
         self.ticks_per_decision = int(max(1, ticks_per_decision))
         self.reward_name = (
-            RewardFunction.QUEUE if reward_name == "queue" else RewardFunction.TOTAL_WAIT
+            RewardFunction.QUEUE
+            if reward_name == "queue"
+            else RewardFunction.TOTAL_WAIT
         )
 
         self._sumo_running = False
@@ -203,7 +209,9 @@ class SingleTLSEnv(gym.Env):
             am = ActionModule(
                 traci,
                 self.tls_id,
-                timing_standards=(self._timing if self._timing else TLSTimingStandards()),
+                timing_standards=(
+                    self._timing if self._timing else TLSTimingStandards()
+                ),
             )
             pm = PreprocessorModule(
                 traci,
@@ -501,7 +509,9 @@ def plot_compare(baseline_csv: Path, ppo_csv: Path, out_dir: Path):
     x = np.arange(3)
     width = 0.35
 
-    plt.bar(x - width / 2, [means_q[0], means_w[0], means_r[0]], width, label="baseline")
+    plt.bar(
+        x - width / 2, [means_q[0], means_w[0], means_r[0]], width, label="baseline"
+    )
     plt.bar(x + width / 2, [means_q[1], means_w[1], means_r[1]], width, label="ppo")
     plt.xticks(x, ["mean queue", "mean wait", "mean reward"])
     plt.ylabel("value")
@@ -597,7 +607,11 @@ def main():
     model = PPO("MlpPolicy", env, **ppo_kwargs)
     print("[train] PPO training…")
     # tb_log_name controls the run subfolder inside tensorboard_log
-    model.learn(total_timesteps=args.train_steps, tb_log_name="ppo_single_tls", progress_bar=True)
+    model.learn(
+        total_timesteps=args.train_steps,
+        tb_log_name="ppo_single_tls",
+        progress_bar=True,
+    )
     close_sumo()
 
     # Save to zip
@@ -625,7 +639,6 @@ def main():
     # 4) Plots
     plot_compare(baseline_csv, ppo_csv, outdir)
     env.close()
-
 
 
 if __name__ == "__main__":
