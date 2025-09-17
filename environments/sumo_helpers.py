@@ -13,7 +13,7 @@ class SUMOConfig:
     Configuration for the SUMO simulation.
 
     Attributes:
-        sumocfg (str): Path to the SUMO configuration file.
+        sumocfg_filepath (str): Path to the SUMO configuration file.
         nogui (bool): If True, start SUMO without GUI.
         seed (int | None): Random seed for the simulation. If None, no seed is set.
         time_to_teleport (int): Time in seconds before a vehicle is teleported. Default is -1 (no teleportation).
@@ -57,5 +57,4 @@ def close_sumo() -> None:
     try:
         traci.close(False)
     except Exception:
-        print("Error closing SUMO")
         pass
