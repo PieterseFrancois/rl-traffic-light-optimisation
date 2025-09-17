@@ -10,7 +10,7 @@ import numpy as np
 from environments.pz_multi_tls_env import MultiTLSParallelEnv
 from modules.intersection.intersection import IntersectionConfig
 from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfig
-from environments.sumo_helpers import SUMOConfig
+from utils.sumo_helpers import SUMOConfig
 
 
 def _sample_valid_action(mask: np.ndarray) -> int:

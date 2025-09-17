@@ -14,7 +14,7 @@ from modules.intersection.intersection import (
 from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfig
 
 
-from .sumo_helpers import start_sumo, close_sumo, SUMOConfig
+from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig
 
 
 @dataclass
