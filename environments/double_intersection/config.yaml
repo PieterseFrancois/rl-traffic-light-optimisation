@@ -1,0 +1,41 @@
+# ---- Simulation / env ---- #
+sumo:
+  sumocfg: "environments/double_intersection/sumo_files/double-intersection.sumocfg"
+  gui: false
+  ticks_per_decision: 1
+  episode_length: 512
+  seed: 42
+  time_to_teleport_s: -1
+
+# ---- SUMO Vehicle Attributes  ---- #
+vehicles:
+  avg_vehicle_length_m: 5.0
+  min_gap_m: 2.5
+
+# ---- Feature config  ---- #
+features:
+  include_queue: true
+  include_approach: true
+  include_total_wait: true
+  include_max_wait: true
+  include_total_speed: true
+
+# ---- Intersections (agents)  ---- #
+intersections:
+  defaults:
+    warm_start: true
+    max_detection_range_m: 50.0
+    green_phase_strings: null # Default is to infer from SUMO, but can be overridden per TLS if needed
+    timing_standards: # Set to zero to disable
+      min_green_s: 5.0
+      yellow_s: 2.0
+      all_red_s: 1.0
+      max_green_s: 30.0
+    reward:
+      function: CUMULATIVE_WAIT_DIFF        # QUEUE | TOTAL_WAIT | CUMULATIVE_WAIT_DIFF
+      normalise: true
+
+  # TLS ids and custom overrides
+  list:
+    - id: "J1"
+    - id: "J4"
