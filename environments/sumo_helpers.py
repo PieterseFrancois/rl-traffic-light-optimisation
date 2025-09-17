@@ -18,6 +18,7 @@ class SUMOConfig:
         seed (int | None): Random seed for the simulation. If None, no seed is set.
         time_to_teleport (int): Time in seconds before a vehicle is teleported. Default is -1 (no teleportation).
     """
+
     sumocfg_filepath: str
     nogui: bool
     seed: int | None
@@ -45,7 +46,7 @@ def start_sumo(
         "--time-to-teleport",
         str(config.time_to_teleport),
     ]
-    
+
     if config.seed is not None:
         args += ["--seed", str(config.seed)]
 
