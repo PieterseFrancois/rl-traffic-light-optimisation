@@ -1,5 +1,8 @@
-# Single-file baseline vs adaptive (rule-based) controller for one TLS.
-# Uses your ActionModule + StateModule. Restarts SUMO between runs for a fair comparison.
+# ============================================================
+#  DISCLAIMER:
+#  This manual test case was written by guiding an LLM (GPT-5 Thinking) and then refining it.
+#  The submodules imported and tested here were, however, developed and written individually.
+# ============================================================
 
 import os
 import sys
