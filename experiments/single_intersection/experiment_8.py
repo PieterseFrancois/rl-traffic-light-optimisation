@@ -6,8 +6,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from modules import lane_metrics, plotting
-from modules.metrics_structs import SingleIntersectionMetrics
+from utils import lane_metrics, plotting
+from utils.metrics_structs import SingleIntersectionMetrics
 
 
 def _setup_flow_with_random_bursts(duration=100, base_interval=2.0, burst_chance=0.3):

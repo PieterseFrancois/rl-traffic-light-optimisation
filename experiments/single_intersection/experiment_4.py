@@ -5,8 +5,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from modules import lane_metrics, plotting
-from modules.metrics_structs import SingleIntersectionMetrics
+from utils import lane_metrics, plotting
+from utils.metrics_structs import SingleIntersectionMetrics
 
 
 def _setup_perpendicular_flows(num_vehicles=20):
