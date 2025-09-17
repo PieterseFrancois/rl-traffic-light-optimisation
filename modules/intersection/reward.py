@@ -190,7 +190,7 @@ class RewardModule:
         )
 
         return clipped_wait
-    
+
     def _difference_in_wait_reward(self, state: list[LaneMeasures]) -> float:
         """Calculate the difference in total wait time since the last computation.
 
@@ -204,7 +204,7 @@ class RewardModule:
         if self._last_state_cache is None:
             self._last_state_cache = state
             return 0.0
-        
+
         # Extract previous state from cache and update cache
         previous_state = self._last_state_cache
         self._last_state_cache = state
@@ -214,10 +214,12 @@ class RewardModule:
 
         if not self.normalise_rewards:
             return float(previous_total_wait - current_total_wait)
-        
+
         # Normalise using RESCO parameters and clipping
         RESCO_PARAMS = self._normalisation_cache["resco_normalisation_params"]
-        normalised_diff = float((previous_total_wait - current_total_wait) / RESCO_PARAMS.denominator)
+        normalised_diff = float(
+            (previous_total_wait - current_total_wait) / RESCO_PARAMS.denominator
+        )
         clipped_diff = np_clip(
             normalised_diff, RESCO_PARAMS.lower_bound, RESCO_PARAMS.upper_bound
         )

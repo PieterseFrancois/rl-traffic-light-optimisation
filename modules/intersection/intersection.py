@@ -125,7 +125,9 @@ class IntersectionModule:
 
         self.reward_module.set_active_reward_function(config.reward_function)
 
-    def _init_preprocessor_module(self, config: IntersectionConfig, preprocessor_config: PreprocessorConfig) -> None:
+    def _init_preprocessor_module(
+        self, config: IntersectionConfig, preprocessor_config: PreprocessorConfig
+    ) -> None:
 
         normalisation_params = PreprocessorNormalisationParameters(
             max_detection_range_m=config.max_detection_range_m,
