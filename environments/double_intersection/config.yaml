@@ -3,7 +3,6 @@ sumo:
   sumocfg: "environments/double_intersection/sumo_files/double-intersection.sumocfg"
   gui: false
   ticks_per_decision: 1
-  episode_length: 512
   seed: 42
   time_to_teleport_s: -1
 

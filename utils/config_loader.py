@@ -278,17 +278,6 @@ def load_env_config(yaml_path: str | Path) -> dict[str, Any]:
     feature_config: FeatureConfig = _build_feature_config(config["features"])
     env_kwargs["feature_config"] = feature_config
 
-    # Validate and parse episode config
-    if "episode_length" not in sumo_dict or not isinstance(
-        sumo_dict["episode_length"], int
-    ):
-        raise ValueError("Missing or invalid 'episode_length' configuration value.")
-
-    episode_length = int(sumo_dict["episode_length"])
-    if episode_length <= 0:
-        raise ValueError("'episode_length' must be a positive integer.")
-    env_kwargs["episode_length"] = episode_length
-
     # Validate and parse ticks_per_decision
     if "ticks_per_decision" not in sumo_dict or not isinstance(
         sumo_dict["ticks_per_decision"], int
