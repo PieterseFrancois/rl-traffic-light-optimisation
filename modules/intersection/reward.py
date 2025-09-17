@@ -33,11 +33,12 @@ class RewardFunction(Enum):
 
     - QUEUE: Negative of the total queue length across all lanes.
     - TOTAL_WAIT: Negative of the total waiting time across all lanes.
+    - CUMULATIVE_WAIT_DIFF: Difference in total waiting time since the last computation.
     """
 
-    QUEUE = "queue"
-    TOTAL_WAIT = "total_wait"
-    CUMULATIVE_WAIT_DIFF = "cumulative_wait_diff"
+    QUEUE = "QUEUE"
+    TOTAL_WAIT = "TOTAL_WAIT"
+    CUMULATIVE_WAIT_DIFF = "CUMULATIVE_WAIT_DIFF"
 
 
 class RewardModule:
