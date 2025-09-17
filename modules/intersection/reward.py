@@ -37,6 +37,7 @@ class RewardFunction(Enum):
 
     QUEUE = "queue"
     TOTAL_WAIT = "total_wait"
+    CUMULATIVE_WAIT_DIFF = "cumulative_wait_diff"
 
 
 class RewardModule:
@@ -64,6 +65,7 @@ class RewardModule:
         self._reward_fns: dict[RewardFunction, Callable] = {
             RewardFunction.QUEUE: self._queue_penalty,
             RewardFunction.TOTAL_WAIT: self._total_wait_penalty,
+            RewardFunction.CUMULATIVE_WAIT_DIFF: self._difference_in_wait_reward,
         }
 
         self._normalisation_cache: dict[str, Any] = {
@@ -72,6 +74,7 @@ class RewardModule:
         }
 
         self._last_compute_time = float(self.traci_connection.simulation.getTime())
+        self._last_state_cache: list[LaneMeasures] | None = None
 
     def set_normalise(self, normalisation_params: RewardNormalisationParameters | None):
         """Set whether to normalise rewards. If normalisation_params is None, disable normalisation."""
@@ -93,6 +96,7 @@ class RewardModule:
 
         Args:
             state: Current state read from SUMO (list of LaneMeasures).
+            previous_state: Previous state read from SUMO (list of LaneMeasures).
         Returns:
             A float representing the reward for the current state.
         """
@@ -186,3 +190,36 @@ class RewardModule:
         )
 
         return clipped_wait
+    
+    def _difference_in_wait_reward(self, state: list[LaneMeasures]) -> float:
+        """Calculate the difference in total wait time since the last computation.
+
+        Args:
+            state: Current state read from SUMO (list of LaneMeasures).
+
+        Returns:
+            A float representing the difference in total wait time.
+        """
+        # If this is the first call, we cannot compute a difference
+        if self._last_state_cache is None:
+            self._last_state_cache = state
+            return 0.0
+        
+        # Extract previous state from cache and update cache
+        previous_state = self._last_state_cache
+        self._last_state_cache = state
+
+        current_total_wait = sum(lane.total_wait_s for lane in state)
+        previous_total_wait = sum(lane.total_wait_s for lane in previous_state)
+
+        if not self.normalise_rewards:
+            return float(previous_total_wait - current_total_wait)
+        
+        # Normalise using RESCO parameters and clipping
+        RESCO_PARAMS = self._normalisation_cache["resco_normalisation_params"]
+        normalised_diff = float((previous_total_wait - current_total_wait) / RESCO_PARAMS.denominator)
+        clipped_diff = np_clip(
+            normalised_diff, RESCO_PARAMS.lower_bound, RESCO_PARAMS.upper_bound
+        )
+
+        return clipped_diff
