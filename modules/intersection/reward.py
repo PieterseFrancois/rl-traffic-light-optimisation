@@ -76,6 +76,7 @@ class RewardModule:
 
         self._last_compute_time = float(self.traci_connection.simulation.getTime())
         self._last_state_cache: list[LaneMeasures] | None = None
+        self._last_reward: float | None = None
 
     def set_normalise(self, normalisation_params: RewardNormalisationParameters | None):
         """Set whether to normalise rewards. If normalisation_params is None, disable normalisation."""
@@ -104,9 +105,15 @@ class RewardModule:
 
         if self._active_reward_function is None:
             raise RuntimeError("No active reward function set")
+        
+        # If no time has passed since the last computation, return the last reward
+        current_time = float(self.traci_connection.simulation.getTime())
+        if current_time == self._last_compute_time and self._last_reward is not None:
+            return self._last_reward
 
         reward = self._active_reward_function(state)
-        self._last_compute_time = float(self.traci_connection.simulation.getTime())
+        self._last_compute_time = current_time
+        self._last_reward = reward
         # Normalisation handled in the reward functions themselves
         return reward
 
