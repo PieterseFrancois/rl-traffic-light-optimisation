@@ -105,7 +105,7 @@ class RewardModule:
 
         if self._active_reward_function is None:
             raise RuntimeError("No active reward function set")
-        
+
         # If no time has passed since the last computation, return the last reward
         current_time = float(self.traci_connection.simulation.getTime())
         if current_time == self._last_compute_time and self._last_reward is not None:

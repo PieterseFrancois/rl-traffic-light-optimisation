@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from modules.intersection.state import LaneMeasures
 
+
 @dataclass
 class BaseIntersectionKPIs:
     """
@@ -15,7 +16,7 @@ class BaseIntersectionKPIs:
 
     total_wait_time_s: float
     total_queue_length: int
-    max_wait_time_s: float   
+    max_wait_time_s: float
 
 
 def get_intersection_kpi(lane_states: list[LaneMeasures]) -> BaseIntersectionKPIs:
