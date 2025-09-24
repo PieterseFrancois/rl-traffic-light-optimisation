@@ -4,33 +4,17 @@ import numpy as np
 from gymnasium import spaces
 from pettingzoo.utils import ParallelEnv
 
-from dataclasses import dataclass
-
 from modules.intersection.intersection import (
     IntersectionConfig,
-    BaseIntersectionKPIs,
     IntersectionModule,
 )
 from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfig
+from modules.intersection.memory import LogEntry
+
+from dataclasses import asdict
 
 
 from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig
-
-
-@dataclass
-class IntersectionKPIs(BaseIntersectionKPIs):
-    """
-    KPIs for a traffic light intersection, extending BaseIntersectionKPIs.
-
-    Attributes:
-        timestamp (float): Simulation time when the KPIs were recorded (in seconds).
-
-        total_wait_time_s (float): Total wait time of all vehicles (in seconds).
-        total_queue_length (int): Total queue length of all vehicles.
-        max_wait_time_s (float): Maximum wait time of any vehicle (in seconds).
-    """
-
-    timestamp: float
 
 
 class MultiTLSParallelEnv(ParallelEnv):
@@ -74,6 +58,7 @@ class MultiTLSParallelEnv(ParallelEnv):
         # Episode timing
         self._t0: float = 0.0
         self._t_end: float = 0.0
+        self._agent_logs: dict[str, list[LogEntry]] = {}
 
     # ---- PettingZoo API spaces ---- #
     def observation_space(self, agent: str):
@@ -177,6 +162,9 @@ class MultiTLSParallelEnv(ParallelEnv):
         close_sumo()
         start_sumo(self.sumo_config)
 
+        # Clear logs
+        self._agent_logs = {}
+
         # Build agents and mark them active
         self._build_tls_agents()
 
@@ -240,25 +228,29 @@ class MultiTLSParallelEnv(ParallelEnv):
         terminations: dict[str, bool] = {tls_id: episode_done for tls_id in self.agents}
         truncations: dict[str, bool] = {tls_id: False for tls_id in self.agents}
 
-        tracked_metrics = {}
-        infos = {}
         for tls_id, agent in self._tls_agents.items():
-            kpis: BaseIntersectionKPIs = agent.get_kpi()
-            tracked_metrics[tls_id] = IntersectionKPIs(
-                timestamp=t_now,
-                total_wait_time_s=kpis.total_wait_time_s,
-                total_queue_length=kpis.total_queue_length,
-                max_wait_time_s=kpis.max_wait_time_s,
-            )
-
-            # CConvert intersection kpis to plain dict for info
-            infos[tls_id] = tracked_metrics[tls_id].__dict__
+            agent.log_to_memory(t=t_now)
+            self._agent_logs[tls_id] = self._agent_logs.get(tls_id, []) + [
+                agent.memory_module.get_latest()
+            ]
 
         # Remove done agents
         if episode_done:
             self.agents = []  # required by PettingZoo API
 
+        infos = {
+            tls_id: (
+                asdict(latest)
+                if (latest := agent.memory_module.get_latest()) is not None
+                else {}
+            )
+            for tls_id, agent in self._tls_agents.items()
+        }
+
         return observations, rewards, terminations, truncations, infos
+
+    def get_agent_logs(self) -> dict[str, list[LogEntry]]:
+        return self._agent_logs
 
     def close(self):
         close_sumo()

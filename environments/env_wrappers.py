@@ -13,7 +13,11 @@ class RLlibPZEnv(ParallelPettingZooEnv):
     def __init__(self, env_config=None):
         env_config = env_config or {}
         env_kwargs = env_config.get("env_kwargs", {})
-        super().__init__(MultiTLSParallelEnv(**env_kwargs))
+        self._pz_env = MultiTLSParallelEnv(**env_kwargs)
+        super().__init__(self._pz_env)
+
+    def get_agent_logs(self) -> dict[str, list]:
+        return self._pz_env.get_agent_logs()
 
 
 def make_rllib_env(env_kwargs) -> Callable:
