@@ -11,6 +11,9 @@ from .preprocessor import (
     PreprocessorConfig,
     PreprocessorNormalisationParameters,
 )
+from .memory import MemoryModule, LogEntry
+
+from utils.kpi import BaseIntersectionKPIs, get_intersection_kpi
 
 
 @dataclass
@@ -27,6 +30,7 @@ class IntersectionConfig:
         normalise_rewards (bool): Whether to normalise rewards in the reward module.
         average_vehicle_length_m (float): Average vehicle length (in meters) for normalisation in the reward module.
         reward_function (RewardFunction): Reward function to use in the reward module.
+        max_memory_records (int | None): Maximum number of records to keep in the memory module. If None, unlimited.
     """
 
     # General configuration for the intersection
@@ -46,21 +50,8 @@ class IntersectionConfig:
     min_gap_between_vehicles_m: float = 2.5
     reward_function: RewardFunction = RewardFunction.TOTAL_WAIT
 
-
-@dataclass
-class BaseIntersectionKPIs:
-    """
-    Base KPIs for an intersection.
-
-    Attributes:
-        total_wait_time_s (float): Total wait time of all vehicles (in seconds).
-        total_queue_length (int): Total queue length of all vehicles.
-        max_wait_time_s (float): Maximum wait time of any vehicle (in seconds).
-    """
-
-    total_wait_time_s: float
-    total_queue_length: int
-    max_wait_time_s: float
+    # Configuration for the memory module
+    max_memory_records: int | None = None
 
 
 class IntersectionModule:
@@ -79,6 +70,7 @@ class IntersectionModule:
         self._init_action_module(config)
         self._init_reward_module(config)
         self._init_preprocessor_module(config, feature_config)
+        self._init_memory_module(config)
 
         # Warm start controller to a known phase
         if config.warm_start:
@@ -145,6 +137,12 @@ class IntersectionModule:
             normalisation_params=normalisation_params,
         )
 
+    def _init_memory_module(self, config: IntersectionConfig) -> None:
+        self.memory_module = MemoryModule(
+            tls_id=self.tls_id,
+            max_records=config.max_memory_records,
+        )
+
     # ---- Probe utility methods ---- #
     def features_per_lane(self) -> int:
         """Get the number of features per lane in the observation space."""
@@ -199,19 +197,36 @@ class IntersectionModule:
         raw_state: list[LaneMeasures] = self.state_module.get_current_state()
         return self.reward_module.compute_reward(raw_state)
 
+    @DeprecationWarning
     def get_kpi(self) -> BaseIntersectionKPIs:
         """Get the current KPIs for the intersection."""
         lane_states: list[LaneMeasures] = self.state_module.get_current_state()
 
-        total_wait_time_s = sum(lane.total_wait_s for lane in lane_states)
-        total_queue_length = sum(lane.queue for lane in lane_states)
-        max_wait_time_s = max((lane.max_wait_s for lane in lane_states), default=0.0)
+        kpis: BaseIntersectionKPIs = get_intersection_kpi(lane_states)
 
-        return BaseIntersectionKPIs(
-            total_wait_time_s=total_wait_time_s,
-            total_queue_length=total_queue_length,
-            max_wait_time_s=max_wait_time_s,
+        return kpis
+
+    def log_to_memory(self, t: float | None) -> LogEntry:
+        """Log the current state and reward to the memory module."""
+        if t is None:
+            t = float(self.traci_connection.simulation.getTime())
+
+        current_lane_states: list[LaneMeasures] = self.state_module.get_current_state()
+
+        kpis: BaseIntersectionKPIs = get_intersection_kpi(current_lane_states)
+
+        log_entry = LogEntry(
+            t=t,
+            reward=self.get_reward(),
+            total_wait_s=kpis.total_wait_time_s,
+            total_queue_length=kpis.total_queue_length,
+            max_wait_s=kpis.max_wait_time_s,
+            lane_measures=current_lane_states,
         )
+
+        self.memory_module.log(log_entry)
+
+        return log_entry
 
     # ---- Other Properties ---- #
     @property
