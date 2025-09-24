@@ -20,7 +20,7 @@ def sumo_baseline_configured_tls(
     Runs a SUMO simulation with configured traffic light systems (TLS) to
     establish a baseline for comparison with RL-based approaches.
 
-    The TLS follow their pre-defined programs without any intervention, 
+    The TLS follow their pre-defined programs without any intervention,
     therefore the TLS must already be configured before the simulation starts.
 
     Logs {t, queue, total_wait, reward} per agent each tick.
