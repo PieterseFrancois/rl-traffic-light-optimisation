@@ -122,7 +122,7 @@ def build_trainer(
     extra_policy_config: dict | None = None,
     algo_overrides: dict | None = None,
 ) -> PPO:
-    
+
     cfg = build_independent_ppo_config(
         env_kwargs=env_kwargs,
         register_fn=register_fn,
@@ -134,7 +134,7 @@ def build_trainer(
         num_sgd_iter=num_sgd_iter,
         lr=lr,
         extra_policy_config=extra_policy_config,
-        algo_overrides=algo_overrides,        
+        algo_overrides=algo_overrides,
     )
 
     return cfg.build_algo()

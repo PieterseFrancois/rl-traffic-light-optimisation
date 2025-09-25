@@ -2,6 +2,7 @@ from ray.rllib.algorithms.ppo import PPO
 
 from modules.intersection.memory import LogEntry
 
+
 def evaluate_trained_scenario(
     trainer: PPO,
     env_creator,
@@ -31,4 +32,3 @@ def evaluate_trained_scenario(
 
     env.close()
     return agent_logs
-
