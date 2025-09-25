@@ -218,8 +218,8 @@ class ActionModule:
                 )
 
         # Ensure each phase string is correct length
-        tls_lanes = self.traci.trafficlight.getControlledLanes(self.tls_id)
-        expected_length = len(tls_lanes)
+        groups = self.traci.trafficlight.getControlledLinks(self.tls_id)
+        expected_length = len(groups)
         for phase_str in green_phase_strings:
             if len(phase_str) != expected_length:
                 raise ValueError(
