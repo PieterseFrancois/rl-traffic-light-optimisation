@@ -83,7 +83,6 @@ graph:
     - [tlN11, tlN10]
     - [tlN10, tlN11]
     - [tlN7,  tlN9]
-    - [tlN8,  tlN7]
     - [tlN3,  tlN4]
     - [tlN4,  tlN3]
     - [tlN4,  tlN6]
