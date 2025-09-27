@@ -154,9 +154,17 @@ class IntersectionModule:
 
     # ---- Step-time methods ---- #
 
-    def read_state(self) -> None:
+    def read_state(self, hold_reward: bool = True) -> None:
         """Read the current state from SUMO via TraCI."""
         self.state_module.read_state()
+
+        # Check if current sim time has already been logged
+        current_simulation_time = float(self.traci_connection.simulation.getTime())
+
+        last_log = self.memory_module.get_latest()
+
+        if last_log is None or last_log.t != current_simulation_time:
+            self.log_to_memory(t=current_simulation_time, hold_reward=hold_reward)
 
     def get_observation(self) -> np.ndarray:
         """Get the current state observation as a NumPy array [L, F], float32."""
@@ -165,6 +173,12 @@ class IntersectionModule:
         x_t: torch.Tensor = self.preprocessor_module.get_state_tensor(
             raw_state
         )  # [L, F] torch
+        x_np: np.ndarray = self.convert_tensor_to_numpy(x_t)  # [L, F] np
+        return x_np  # shape (L, F), dtype float32
+
+    @staticmethod
+    def convert_tensor_to_numpy(x_t: torch.Tensor) -> np.ndarray:
+        """Convert a torch Tensor to a NumPy array [L, F], float32."""
         x_np: np.ndarray = (
             x_t.detach().to(dtype=torch.float32, device="cpu").numpy().copy()
         )
@@ -197,27 +211,37 @@ class IntersectionModule:
         raw_state: list[LaneMeasures] = self.state_module.get_current_state()
         return self.reward_module.compute_reward(raw_state)
 
-    @DeprecationWarning
     def get_kpi(self) -> BaseIntersectionKPIs:
         """Get the current KPIs for the intersection."""
+        print("Warning: get_kpi() is deprecated, use get_intersection_kpi() directly.")
+
         lane_states: list[LaneMeasures] = self.state_module.get_current_state()
 
         kpis: BaseIntersectionKPIs = get_intersection_kpi(lane_states)
 
         return kpis
 
-    def log_to_memory(self, t: float | None) -> LogEntry:
+    def log_to_memory(self, t: float | None, hold_reward: bool = False) -> LogEntry:
         """Log the current state and reward to the memory module."""
         if t is None:
             t = float(self.traci_connection.simulation.getTime())
+
+        # Ensure no duplicate timestamps
+        last_log = self.memory_module.get_latest()
+        if last_log is not None and last_log.t == t:
+            print(
+                f"[warn] Duplicate log timestamp {t} for TLS {self.tls_id}, skipping log."
+            )
+            return last_log
 
         current_lane_states: list[LaneMeasures] = self.state_module.get_current_state()
 
         kpis: BaseIntersectionKPIs = get_intersection_kpi(current_lane_states)
 
+        REWARD_PLACEHOLDER: float = 0.0
         log_entry = LogEntry(
             t=t,
-            reward=self.get_reward(),
+            reward=self.get_reward() if not hold_reward else REWARD_PLACEHOLDER,
             total_wait_s=kpis.total_wait_time_s,
             total_queue_length=kpis.total_queue_length,
             max_wait_s=kpis.max_wait_time_s,
