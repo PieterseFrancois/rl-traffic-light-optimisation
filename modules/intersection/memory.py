@@ -8,7 +8,7 @@ from dataclasses import dataclass, asdict
 from .state import LaneMeasures
 
 
-@dataclass(frozen=True)
+@dataclass
 class LogEntry:
     """
     Immutable time-stamped log entry for one intersection at simulation time t.
@@ -94,6 +94,19 @@ class MemoryModule:
 
     def get_latest(self) -> LogEntry | None:
         return self._logs[-1] if self._logs else None
+
+    def set_latest_reward(self, reward: float) -> None:
+        """Set the reward of the latest log entry."""
+        if not self._logs:
+            raise ValueError("No log entries to update.")
+        self._logs[-1] = LogEntry(
+            t=self._logs[-1].t,
+            reward=reward,
+            total_wait_s=self._logs[-1].total_wait_s,
+            total_queue_length=self._logs[-1].total_queue_length,
+            max_wait_s=self._logs[-1].max_wait_s,
+            lane_measures=self._logs[-1].lane_measures,
+        )
 
     def export_csv(self, filepath: str) -> None:
         """Export all recorded logs to a CSV file."""
