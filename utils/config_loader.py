@@ -9,6 +9,9 @@ from modules.intersection.action import TLSTimingStandards
 from modules.intersection.reward import RewardFunction
 from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfig
 from modules.intersection.intersection import IntersectionConfig
+
+from modules.traffic_graph import TrafficGraphConfig, NeighbourScope
+
 from utils.sumo_helpers import SUMOConfig
 
 
@@ -254,6 +257,47 @@ def _build_intersection_configs(
     return intersection_configs
 
 
+def _convert_str_to_neighbour_scope_(function_str: str) -> NeighbourScope:
+    """Convert a string to a NeighbourScope enum instance."""
+    key = str(function_str).strip().upper()
+
+    # Map to enum, will raise KeyError if invalid
+    try:
+        return getattr(NeighbourScope, key)
+    except Exception as e:
+        raise ValueError(
+            f"Error converting '{function_str}' to NeighbourScope instance: {e}"
+        )
+
+
+def _build_traffic_graph_config(
+    config_dict: dict[str, Any], nodes: list[str]
+) -> TrafficGraphConfig:
+    """Build a TrafficGraphConfig instance from a config dictionary."""
+
+    # Ensure required keys are present
+    REQUIRED_KEYS = (
+        "neighbour_scope",
+        "hops",
+        "fixed_discount",
+        "allow_self_loops",
+    )
+    for key in REQUIRED_KEYS:
+        if key not in config_dict:
+            raise ValueError(f"Missing required key for graph: {key}")
+
+    return TrafficGraphConfig(
+        neighbour_scope=_convert_str_to_neighbour_scope_(
+            config_dict["neighbour_scope"]
+        ),
+        hops=int(config_dict["hops"]),
+        fixed_discount=float(config_dict["fixed_discount"]),
+        allow_self_loops=bool(config_dict["allow_self_loops"]),
+        nodes=nodes,
+        edges=config_dict.get("edges", None),
+    )
+
+
 def load_env_config(yaml_path: str | Path) -> dict[str, Any]:
     """Load and parse the environment configuration from a YAML file."""
 
@@ -299,5 +343,17 @@ def load_env_config(yaml_path: str | Path) -> dict[str, Any]:
         config["intersections"], config["vehicles"]
     )
     env_kwargs["intersection_agent_configs"] = intersection_configs
+
+    # Validate and parse traffic graph config
+    if "graph" not in config:
+        raise ValueError("Missing 'graph' configuration section.")
+
+    # Get node ids from intersections
+    nodes: list[str] = [ic.tls_id for ic in intersection_configs]
+
+    traffic_graph_config: TrafficGraphConfig = _build_traffic_graph_config(
+        config["graph"], nodes
+    )
+    env_kwargs["traffic_graph_config"] = traffic_graph_config
 
     return env_kwargs
