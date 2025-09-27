@@ -80,10 +80,14 @@ class TrafficGraph:
     def _validate_config(config: TrafficGraphConfig):
         """Validate the TrafficGraphConfig parameters."""
         if not isinstance(config.neighbour_scope, NeighbourScope):
-            raise ValueError("TrafficGraphConfig Error: neighbour_scope must be NeighbourScope")
+            raise ValueError(
+                "TrafficGraphConfig Error: neighbour_scope must be NeighbourScope"
+            )
 
-        if config.hops < 0: 
-            raise ValueError("TrafficGraphConfig Error: Hops must be an integer greater than or equal to zero.") 
+        if config.hops < 0:
+            raise ValueError(
+                "TrafficGraphConfig Error: Hops must be an integer greater than or equal to zero."
+            )
 
         if not (0.0 < config.fixed_discount <= 1.0):
             raise ValueError(
@@ -101,12 +105,14 @@ class TrafficGraph:
             )
 
         if config.edges is not None:
-            if len(config.edges) != len(set(config.edges)):
-                raise ValueError(
-                    "TrafficGraphConfig Error: Duplicate edges found in edges list"
-                )
-
+            
+            seen: list[tuple[str, str]] = []
             for edge in config.edges:
+
+                if edge in seen:
+                    raise ValueError(
+                        "TrafficGraphConfig Error: Edges must be unique, but duplicate found"
+                    )
 
                 if len(edge) != 2:
                     raise ValueError(
@@ -122,6 +128,8 @@ class TrafficGraph:
                     raise ValueError(
                         "TrafficGraphConfig Error: Self-loops are not allowed but found in edges list"
                     )
+                
+                seen.append(edge)
 
     # ---- Utility Methods ---- #
 
@@ -165,8 +173,10 @@ class TrafficGraph:
 
     def set_hops(self, hops: int) -> None:
         """Set the number of hops for the graph."""
-        if hops < 0: 
-            raise ValueError("TrafficGraphConfig Error: Hops must be an integer greater than or equal to zero.") 
+        if hops < 0:
+            raise ValueError(
+                "TrafficGraphConfig Error: Hops must be an integer greater than or equal to zero."
+            )
         self._hops = hops
 
         self._neighbour_table_cache = None  # Invalidate cache on hops change
