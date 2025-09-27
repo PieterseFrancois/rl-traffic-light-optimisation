@@ -73,8 +73,8 @@ def sumo_baseline_configured_tls(
 
         # Read and log KPIs + reward
         for tls_id, agent in agents.items():
-            agent.read_state()
-            agent.log_to_memory(t=t_now)
+            agent.read_state(hold_reward=False)
+            # agent.log_to_memory(t=t_now) # Now included in read_state()
 
             log_entry: LogEntry = agent.memory_module.get_latest()
             if log_entry is None:
