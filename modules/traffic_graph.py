@@ -105,7 +105,7 @@ class TrafficGraph:
             )
 
         if config.edges is not None:
-            
+
             seen: list[tuple[str, str]] = []
             for edge in config.edges:
 
@@ -128,7 +128,7 @@ class TrafficGraph:
                     raise ValueError(
                         "TrafficGraphConfig Error: Self-loops are not allowed but found in edges list"
                     )
-                
+
                 seen.append(edge)
 
     # ---- Utility Methods ---- #

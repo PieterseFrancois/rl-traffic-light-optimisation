@@ -128,7 +128,9 @@ class ModelManager:
 
         # Get absolute checkpoint path - currently we have realtive to base directory
         base_dir = Path.cwd()
-        checkpoint_path_rel: Path = Path(base_dir) / Path(run_dir) / meta["checkpoint_path"]
+        checkpoint_path_rel: Path = (
+            Path(base_dir) / Path(run_dir) / meta["checkpoint_path"]
+        )
         checkpoint_path_abs = checkpoint_path_rel.absolute()
 
         return env_kwargs, model_name, custom_model_cfg, checkpoint_path_abs
