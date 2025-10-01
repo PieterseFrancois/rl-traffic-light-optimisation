@@ -38,3 +38,13 @@ intersections:
   list:
     - id: "J1"
     - id: "J4"
+
+graph:
+  neighbour_scope: ALL     # ALL | UPSTREAM | DOWNSTREAM
+  neighbour_lag_steps: 0   # Time lag to consider neighbours (steps), 0 = instantaneous
+  hops: 1
+  fixed_discount: 0.9     # Discount factor per hop if model does not use GAT   (0.0, 1.0]
+  allow_self_loops: false  # Usually false unless specif reason to include self-loops
+  edges:
+    - [J1,  J4]
+    - [J4,  J1]
