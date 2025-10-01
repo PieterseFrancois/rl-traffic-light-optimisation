@@ -2,12 +2,15 @@ from ray.rllib.algorithms.ppo import PPO
 
 from modules.intersection.memory import LogEntry
 
+from pathlib import Path
+
 
 def evaluate_trained_scenario(
     trainer: PPO,
     env_creator,
     *,
     max_steps: int,
+    log_directory: str | Path,
 ) -> dict[str, list[LogEntry]]:
     """
     Use RLlib trainer to act. One independent policy per agent (policy id == agent id).
@@ -16,6 +19,8 @@ def evaluate_trained_scenario(
     obs, _infos = env.reset()
 
     steps = 0
+
+    env.set_log_directory(log_directory)
     while env.agents and steps < max_steps:
         actions = {}
         for tls_id, ob in obs.items():

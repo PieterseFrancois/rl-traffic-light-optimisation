@@ -15,8 +15,8 @@ from modules.intersection.memory import LogEntry
 from modules.traffic_graph import TrafficGraph, TrafficGraphConfig, NeighbourInfo
 from modules.communication_bus import CommunicationBus
 
+from pathlib import Path
 from dataclasses import asdict
-
 
 from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig
 
@@ -76,6 +76,8 @@ class MultiTLSParallelEnv(ParallelEnv):
         self.comm_bus = CommunicationBus()
 
         self._sumo_step_size_s: float = 0.0
+
+        self._log_directory: Path | str | None = None
 
     # ---- PettingZoo API spaces ---- #
     def observation_space(self, agent: str):
@@ -379,6 +381,13 @@ class MultiTLSParallelEnv(ParallelEnv):
 
         # Remove done agents
         if episode_done:
+            # export logs for all agents during an evaluation rollout
+            if self._log_directory is not None:
+                for tls_id, agent in self._tls_agents.items():
+                    filepath = Path(self._log_directory) / f"eval_{tls_id}.csv"
+                    filepath.parent.mkdir(parents=True, exist_ok=True)
+                    agent.memory_module.export_csv(filepath)
+
             self.agents = []  # required by PettingZoo API
 
         infos = {
@@ -391,6 +400,10 @@ class MultiTLSParallelEnv(ParallelEnv):
         }
 
         return observations, rewards, terminations, truncations, infos
+
+    def set_log_directory(self, log_directory: Path | str) -> None:
+        """Set log directory for all agents."""
+        self._log_directory = log_directory
 
     def get_agent_logs(self) -> dict[str, list[LogEntry]]:
         return self._agent_logs

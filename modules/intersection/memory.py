@@ -116,7 +116,15 @@ class MemoryModule:
 
         with open(filepath, mode="w", newline="") as csvfile:
             writer = csv.DictWriter(
-                csvfile, fieldnames=["t", "reward", "lane_measures"]
+                csvfile,
+                fieldnames=[
+                    "t",
+                    "reward",
+                    "total_wait_s",
+                    "total_queue_length",
+                    "max_wait_s",
+                    "lane_measures",
+                ],
             )
             writer.writeheader()
             for e in self._logs:
@@ -124,6 +132,9 @@ class MemoryModule:
                     {
                         "t": f"{e.t:.2f}",
                         "reward": f"{e.reward:.6f}",
+                        "total_wait_s": f"{e.total_wait_s:.2f}",
+                        "total_queue_length": str(e.total_queue_length),
+                        "max_wait_s": f"{e.max_wait_s:.2f}",
                         "lane_measures": json.dumps(
                             [asdict(lm) for lm in e.lane_measures]
                         ),

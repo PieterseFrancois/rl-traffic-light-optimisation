@@ -1,5 +1,7 @@
 import traci
 
+from pathlib import Path
+
 from modules.intersection.intersection import (
     IntersectionModule,
     IntersectionConfig,
@@ -14,6 +16,7 @@ def sumo_baseline_configured_tls(
     intersection_configs: list[IntersectionConfig],
     feature_config: FeatureConfig,
     simulation_duration: float,
+    log_directory: Path | str,
     ticks_per_decision: int = 1,
 ) -> dict[str, list[LogEntry]]:
     """
@@ -30,6 +33,7 @@ def sumo_baseline_configured_tls(
         intersection_configs (list[IntersectionConfig]): List of intersection configurations.
         feature_config (FeatureConfig): Configuration for feature extraction.
         simulation_duration (float): Duration of the simulation in seconds.
+        log_directory (Path | str): Directory to save the log CSV files.
         ticks_per_decision (int, optional): Number of simulation ticks between each decision step. Defaults to 1.
 
     Returns:
@@ -84,6 +88,11 @@ def sumo_baseline_configured_tls(
     agent_logs: dict[str, list[LogEntry]] = {
         tls_id: agent.memory_module.get_all_logs() for tls_id, agent in agents.items()
     }
+
+    for tls_id, agent in agents.items():
+        filepath = Path(log_directory) / f"baseline_{tls_id}.csv"
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        agent.memory_module.export_csv(filepath)
 
     close_sumo()
     return agent_logs

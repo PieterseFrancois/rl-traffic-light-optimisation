@@ -3,6 +3,8 @@ from environments.pz_multi_tls_env import MultiTLSParallelEnv
 
 from typing import Callable
 
+from pathlib import Path
+
 
 class RLlibPZEnv(ParallelPettingZooEnv):
     """
@@ -18,6 +20,9 @@ class RLlibPZEnv(ParallelPettingZooEnv):
 
     def get_agent_logs(self) -> dict[str, list]:
         return self._pz_env.get_agent_logs()
+
+    def set_log_directory(self, log_directory: Path | str) -> None:
+        self._pz_env.set_log_directory(log_directory)
 
 
 def make_rllib_env(env_kwargs) -> Callable:
