@@ -6,17 +6,37 @@ from typing import Callable
 from environments.env_wrappers import RLlibPZEnv
 
 
+from dataclasses import dataclass
+
+
+@dataclass
+class TrainerParameters:
+    """
+    Parameters for building an independent PPO trainer.
+
+    Attributes:
+        num_workers (int): Number of parallel rollout workers. Default 0.
+        rollout_fragment_length (int): Number of steps to include in each rollout fragment. Default 200.
+        train_batch_size (int): Size of the training batch. Default 4000.
+        minibatch_size (int): Size of each minibatch. Default 128.
+        num_epochs (int): Number of epochs per training batch. Default 4.
+        lr (float): Learning rate. Default 1e-4.
+    """
+
+    num_workers: int = 0
+    rollout_fragment_length: int = 200
+    train_batch_size: int = 4000
+    minibatch_size: int = 128
+    num_epochs: int = 4
+    lr: float = 1e-4
+
+
 def build_independent_ppo_config(
     *,
     env_kwargs: dict,
     register_fn: Callable[[], None],
     training_model: dict,
-    num_workers: int,
-    rollout_fragment_length: int,
-    train_batch_size: int,
-    sgd_minibatch_size: int,
-    num_sgd_iter: int,
-    lr: float,
+    trainer_params: TrainerParameters,
     extra_policy_config: dict | None = None,
     algo_overrides: dict | None = None,
 ) -> PPOConfig:
@@ -27,12 +47,7 @@ def build_independent_ppo_config(
         env_kwargs: kwargs passed to the env constructor.
         register_fn: Function to register any custom models used by the policies.
         training_model: Model config dict used by all policies.
-        num_workers: Number of parallel rollout workers.
-        rollout_fragment_length: Number of env steps per rollout fragment.
-        train_batch_size: Training batch size.
-        sgd_minibatch_size: SGD minibatch size.
-        num_sgd_iter: Number of SGD iterations per training batch.
-        lr: Learning rate.
+        trainer_params: TrainerParameters: Parameters for the PPO trainer.
         extra_policy_config: Extra config to add to each policy's config dict.
         algo_overrides: Extra config to add to the PPOConfig.
 
@@ -74,10 +89,10 @@ def build_independent_ppo_config(
         raise ValueError("training_model must be a dict with at least 'custom_model'")
 
     training_kwargs = dict(
-        lr=lr,
-        train_batch_size=train_batch_size,
-        minibatch_size=sgd_minibatch_size,
-        num_epochs=num_sgd_iter,
+        lr=trainer_params.lr,
+        train_batch_size=trainer_params.train_batch_size,
+        minibatch_size=trainer_params.minibatch_size,
+        num_epochs=trainer_params.num_epochs,
         model=training_model,
     )
     if algo_overrides:
@@ -94,8 +109,8 @@ def build_independent_ppo_config(
         .environment(env=RLlibPZEnv, env_config={"env_kwargs": env_kwargs})
         .framework("torch")
         .env_runners(
-            num_env_runners=num_workers,
-            rollout_fragment_length=rollout_fragment_length,
+            num_env_runners=trainer_params.num_workers,
+            rollout_fragment_length=trainer_params.rollout_fragment_length,
             batch_mode=BATCH_MODE,
         )
         .training(**training_kwargs)
@@ -113,12 +128,7 @@ def build_trainer(
     env_kwargs: dict,
     register_fn: Callable[[], None],
     training_model: dict,
-    num_workers: int,
-    rollout_fragment_length: int,
-    train_batch_size: int,
-    sgd_minibatch_size: int,
-    num_sgd_iter: int,
-    lr: float,
+    trainer_params: TrainerParameters,
     extra_policy_config: dict | None = None,
     algo_overrides: dict | None = None,
 ) -> PPO:
@@ -127,12 +137,7 @@ def build_trainer(
         env_kwargs=env_kwargs,
         register_fn=register_fn,
         training_model=training_model,
-        num_workers=num_workers,
-        rollout_fragment_length=rollout_fragment_length,
-        train_batch_size=train_batch_size,
-        sgd_minibatch_size=sgd_minibatch_size,
-        num_sgd_iter=num_sgd_iter,
-        lr=lr,
+        trainer_params=trainer_params,
         extra_policy_config=extra_policy_config,
         algo_overrides=algo_overrides,
     )
