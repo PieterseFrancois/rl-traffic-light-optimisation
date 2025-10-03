@@ -25,8 +25,23 @@ class SUMOConfig:
     time_to_teleport: int = -1
 
 
+@dataclass
+class NetworkStateLogging:
+    """
+    Configuration for network state logging in SUMO.
+
+    Attributes:
+        run_label (str): Label for the simulation run, used in log filenames.
+        log_directory (str): Directory to save the log CSV files.
+    """
+
+    log_directory: str
+    run_label: str
+
+
 def start_sumo(
     config: SUMOConfig,
+    network_logging: NetworkStateLogging | None = None,
 ) -> None:
     """Start the SUMO simulation."""
 
@@ -49,6 +64,30 @@ def start_sumo(
 
     if config.seed is not None:
         args += ["--seed", str(config.seed)]
+
+    if network_logging is not None:
+        os.makedirs(network_logging.log_directory, exist_ok=True)
+        args += [
+            "--summary-output",
+            os.path.join(
+                network_logging.log_directory,
+                f"{network_logging.run_label}_summary.xml",
+            ),
+            "--summary-output.period",
+            "1",
+            "--no-step-log",
+            "true",
+        ]
+
+        args += [
+            "--tripinfo-output",
+            os.path.join(
+                network_logging.log_directory,
+                f"{network_logging.run_label}_tripinfo.xml",
+            ),
+            "--tripinfo-output.write-unfinished",
+            "true",
+        ]
 
     traci.start(args)
 
