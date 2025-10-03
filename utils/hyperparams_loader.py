@@ -26,7 +26,7 @@ def _build_training_params(param_dict: dict[str, Any]) -> TrainingHyperparameter
         max_iterations=int(param_dict["max_iterations"]),
         patience=int(param_dict["early_stopping_patience"]),
         min_delta=float(param_dict["minimum_improvement"]),
-        moving_window_size=int(param_dict["moving_window_size"]),
+        window=int(param_dict["moving_window_size"]),
     )
 
 
@@ -39,7 +39,7 @@ def _build_trainer_params(param_dict: dict[str, Any]) -> TrainerParameters:
         "train_batch_size",
         "minibatch_size",
         "num_epochs",
-        "lr",
+        "learning_rate",
         "gamma",
         "batch_mode",
     ]
@@ -63,7 +63,7 @@ def _build_trainer_params(param_dict: dict[str, Any]) -> TrainerParameters:
         train_batch_size=int(param_dict["train_batch_size"]),
         minibatch_size=int(param_dict["minibatch_size"]),
         num_epochs=int(param_dict["num_epochs"]),
-        lr=float(param_dict["lr"]),
+        lr=float(param_dict["learning_rate"]),
         gamma=float(param_dict["gamma"]),
         batch_mode=batch_mode,
     )
@@ -104,7 +104,7 @@ def load_hyperparameters(yaml_path: str | Path) -> dict[str, Any]:
     # Validate and parse model parameters
     if "model" not in file or not isinstance(file["model"], dict):
         raise ValueError("Missing or invalid 'model' configuration section.")
-    
+
     model_dict = file["model"]
     model_params: dict[str, Any] = _build_model_params(model_dict)
     hyperparams["model_params"] = model_params
