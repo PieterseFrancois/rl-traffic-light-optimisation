@@ -14,9 +14,9 @@ from policy.independent_ppo_setup import build_trainer, TrainerParameters
 class ModelManager:
 
     def __init__(self):
-        self.ENV_KWARGS_FILENAME: str = "env_kwargs"
+        self.ENV_KWARGS_FILENAME: str = "env_kwargs.pkl"
         self.CHECKPOINT_SUBDIR: str = "checkpoint"
-        self.META_FILENAME: str = "meta"
+        self.META_FILENAME: str = "meta.json"
 
     def _save_checkpoint_compat(self, trainer: PPO, out_dir: Path) -> Path:
         """Handle RLlib return types for save()."""
@@ -76,7 +76,7 @@ class ModelManager:
         checkpoint_path_rel = os.path.relpath(checkpoint_abs, bundle_dir_rel)
 
         # 2) Save env_kwargs as pickle (exact Python objects)
-        env_pkl_path = Path(bundle_dir_rel / self.ENV_KWARGS_FILENAME / ".pkl")
+        env_pkl_path: Path = Path(bundle_dir_rel) / Path(self.ENV_KWARGS_FILENAME)
         with open(env_pkl_path, "wb") as f:
             pickle.dump(env_kwargs, f, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -90,7 +90,7 @@ class ModelManager:
             "notes": notes or "",
         }
 
-        (bundle_dir_rel / self.META_FILENAME / ".json").write_text(
+        (bundle_dir_rel / self.META_FILENAME).write_text(
             json.dumps(meta, indent=2), encoding="utf-8"
         )
 
@@ -114,9 +114,7 @@ class ModelManager:
             checkpoint_path_abs : absolute Path to the RLlib checkpoint.
         """
         run_dir = Path(bundle_run_dir)
-        meta = json.loads(
-            (run_dir / self.META_FILENAME / ".json").read_text(encoding="utf-8")
-        )
+        meta = json.loads((run_dir / self.META_FILENAME).read_text(encoding="utf-8"))
 
         # Unpickle env_kwargs (exact Python objects like SUMOConfig)
         env_pkl_path = run_dir / meta["env_kwargs_file"]
