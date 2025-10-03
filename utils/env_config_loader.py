@@ -315,6 +315,16 @@ def load_env_config(yaml_path: str | Path) -> dict[str, Any]:
     sumo_config: SUMOConfig = _build_sumo_config(sumo_dict)
     env_kwargs["sumo_config"] = sumo_config
 
+    # Validate and parse simulation length
+    if "simulation_length" not in sumo_dict or not isinstance(
+        sumo_dict["simulation_length"], int
+    ):
+        raise ValueError("Missing or invalid 'simulation_length' configuration value.")
+    simulation_length = int(sumo_dict["simulation_length"])
+    if simulation_length <= 0:
+        raise ValueError("'simulation_length' must be a positive integer.")
+    env_kwargs["episode_length"] = simulation_length
+
     # Validate and parse feature config
     if "features" not in config or not isinstance(config["features"], dict):
         raise ValueError("Missing or invalid 'features' configuration section.")

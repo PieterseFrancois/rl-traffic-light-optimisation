@@ -5,6 +5,7 @@ sumo:
   ticks_per_decision: 1
   seed: 42
   time_to_teleport_s: -1
+  simulation_length: 4000
 
 # ---- SUMO Vehicle Attributes  ---- #
 vehicles:
