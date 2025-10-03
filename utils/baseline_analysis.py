@@ -8,7 +8,8 @@ from modules.intersection.intersection import (
 )
 from modules.intersection.memory import LogEntry
 from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfig
-from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig
+
+from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig, NetworkStateLogging
 
 
 def sumo_baseline_configured_tls(
@@ -41,7 +42,13 @@ def sumo_baseline_configured_tls(
     """
     # (Re)start SUMO
     close_sumo()
-    start_sumo(sumo_config)
+    start_sumo(
+        sumo_config,
+        network_logging=NetworkStateLogging(
+            log_directory=str(log_directory),
+            run_label="baseline",
+        ),
+    )
 
     # Ensure all configs have warm_start=False (ensures a pure program-following baseline)
     for config in intersection_configs:
