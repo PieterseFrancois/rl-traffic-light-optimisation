@@ -21,6 +21,8 @@ class TrainerParameters:
         minibatch_size (int): Size of each minibatch. Default 128.
         num_epochs (int): Number of epochs per training batch. Default 4.
         lr (float): Learning rate. Default 1e-4.
+        gamma (float): Discount factor. Default 0.99.
+        batch_mode (str): "complete_episodes" or "truncate_episodes". Default "truncate_episodes".
     """
 
     num_workers: int = 0
@@ -29,6 +31,8 @@ class TrainerParameters:
     minibatch_size: int = 128
     num_epochs: int = 4
     lr: float = 1e-4
+    gamma: float = 0.99
+    batch_mode: str = "truncate_episodes"  # "complete_episodes" | "truncate_episodes"
 
 
 def build_independent_ppo_config(
@@ -93,12 +97,11 @@ def build_independent_ppo_config(
         train_batch_size=trainer_params.train_batch_size,
         minibatch_size=trainer_params.minibatch_size,
         num_epochs=trainer_params.num_epochs,
+        gamma=trainer_params.gamma,
         model=training_model,
     )
     if algo_overrides:
         training_kwargs.update(algo_overrides)
-
-    BATCH_MODE: str = "truncate_episodes"  # "complete_episodes"
 
     cfg = (
         PPOConfig()
@@ -111,7 +114,7 @@ def build_independent_ppo_config(
         .env_runners(
             num_env_runners=trainer_params.num_workers,
             rollout_fragment_length=trainer_params.rollout_fragment_length,
-            batch_mode=BATCH_MODE,
+            batch_mode=trainer_params.batch_mode,
         )
         .training(**training_kwargs)
         .multi_agent(
@@ -120,6 +123,7 @@ def build_independent_ppo_config(
             policies_to_train=list(policies.keys()),
         )
     )
+
     return cfg
 
 
