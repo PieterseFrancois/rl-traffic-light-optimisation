@@ -1,3 +1,4 @@
+import random
 import traci
 import numpy as np
 from torch import Tensor
@@ -18,7 +19,7 @@ from modules.communication_bus import CommunicationBus
 from pathlib import Path
 from dataclasses import asdict
 
-from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig
+from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig, NetworkStateLogging
 
 
 class MultiTLSParallelEnv(ParallelEnv):
@@ -302,7 +303,20 @@ class MultiTLSParallelEnv(ParallelEnv):
 
         # (Re)start SUMO
         close_sumo()
-        start_sumo(self.sumo_config)
+
+        if self._log_directory is not None:
+            start_sumo(
+                self.sumo_config,
+                network_logging=NetworkStateLogging(
+                    log_directory=str(self._log_directory), run_label="eval"
+                ),
+            )
+        else:
+            # Randomise seed during training
+            training_config = self.sumo_config
+            rng = random.Random()
+            training_config.seed = rng.randrange(1, 2**31 - 1)
+            start_sumo(training_config)
 
         # Clear logs
         self._agent_logs = {}
