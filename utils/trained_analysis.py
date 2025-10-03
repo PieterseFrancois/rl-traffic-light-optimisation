@@ -16,11 +16,12 @@ def evaluate_trained_scenario(
     Use RLlib trainer to act. One independent policy per agent (policy id == agent id).
     """
     env = env_creator()
+
+    env.set_log_directory(log_directory)
+
     obs, _infos = env.reset()
 
     steps = 0
-
-    env.set_log_directory(log_directory)
     while env.agents and steps < max_steps:
         actions = {}
         for tls_id, ob in obs.items():
