@@ -1,0 +1,20 @@
+training:
+  max_iterations: 1
+  early_stopping_patience: 3
+  minimum_improvement: 0.01
+  moving_window_size: 10
+
+trainer:
+  num_workers: 0
+  rollout_fragment_length: 400
+  train_batch_size: 8000
+  minibatch_size: 512
+  num_epochs: 4
+  learning_rate: 3e-4
+  gamma: 0.99   # Discount factor of Markov decision process
+  batch_mode: complete_episodes  # complete_episodes | truncate_episodes
+
+model:
+  policy_head_hidden_sizes: [128, 128]
+  value_head_hidden_sizes: [128, 128]
+  hidden_activation: Tanh
