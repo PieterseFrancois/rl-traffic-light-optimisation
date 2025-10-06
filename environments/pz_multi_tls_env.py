@@ -313,9 +313,13 @@ class MultiTLSParallelEnv(ParallelEnv):
             )
         else:
             # Randomise seed during training
-            training_config = self.sumo_config
             rng = random.Random()
-            training_config.seed = rng.randrange(1, 2**31 - 1)
+            training_config = SUMOConfig(
+                sumocfg_filepath=self.sumo_config.sumocfg_filepath,
+                nogui=self.sumo_config.nogui,
+                seed=rng.randint(1, 2**31 - 1), 
+                time_to_teleport=self.sumo_config.time_to_teleport,
+            )
             start_sumo(training_config)
 
         # Clear logs
