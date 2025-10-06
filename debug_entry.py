@@ -19,7 +19,7 @@ def main():
     run(
         config_file=args.config_file,
         hyperparams_file=args.hyperparams_file,
-        outdir=args.outdir + "_debug",
+        outdir=args.outdir,
         freeflow_speed_mps=args.freeflow_speed_mps,
     )
 
