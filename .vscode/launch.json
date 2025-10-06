@@ -74,9 +74,9 @@
         "--reward", "wait",
         "--norm-state",
         "--norm-reward",
-        "--outdir", ".surrounding_modules_test_runs/ppo_test",
+        "--outdir", ".surrounding_modules_test_runs/hope",
         "--tensorboard", 
-        "--logdir", ".surrounding_modules_test_runs/ppo_test/tb",
+        "--logdir", ".surrounding_modules_test_runs/hope/tb",
         "--tensorboard-port", "6006"
       ]
     },
@@ -112,11 +112,99 @@
         "--reward", "total_wait",
         "--norm-state",
         "--norm-reward",
-        "--outdir", ".embedder_module_test_runs/ppo_test",
+        "--outdir", ".embedder_module_test_runs/prfl",
         "--tensorboard",
-        "--logdir", ".embedder_module_test_runs/ppo_test/tb",
+        "--logdir", ".embedder_module_test_runs/prfl/tb",
         "--tensorboard-port", "6006"
+      ]
+    },
+    {
+      "name": "ParallelEnv: Smoke Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/environments/tests/smoke_test_parallel_env.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--sumocfg", "environments/single_intersection/sumo_files/single-intersection-single-lane.sumocfg",
+        "--tls-ids", "tlJ",
+        "--episode-length", "120",
+        "--ticks-per-decision", "1",
+        "--max-steps", "100",
+        "--seed", "42",
+      ],
+    },
+    {
+      "name": "RLlib Independent PPO vs Baseline",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/debug_entry.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--config-file", "environments/single_intersection/config.yaml",
+        "--hyperparams-file", "environments/single_intersection/hyperparams.yaml",
+        "--outdir", ".rllib_independent_ppo_test/single_intersection_constant_seed"
+      ]
+    },
+    {
+      "name": "Double Trouble: RLlib Independent PPO vs Baseline",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/debug_entry.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--config-file", "environments/double_intersection/config.yaml",
+        "--hyperparams-file", "environments/double_intersection/hyperparams.yaml",
+        "--outdir", ".rllib_independent_ppo_test/double_trouble_flat_model_quick"
+      ]
+    },
+    {
+      "name": "Ingolstadt: RLlib Independent PPO vs Baseline",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/debug_entry.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--config-file", "environments/ingolstadt/config.yaml",
+        "--hyperparams-file", "environments/ingolstadt/hyperparams.yaml",
+        "--outdir", ".rllib_independent_ppo_test/ingolstadt_random_seed"
+      ]
+    },
+    {
+      "name": "Tuner: Single",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/utils/tune_pbt.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--config", "environments/single_intersection/config.yaml",
+        "--hyper", "environments/single_intersection/hyperparams.yaml",
+        "--outdir", ".tuning/single_intersection_constant_seed"
+      ]
+    },
+    {
+      "name": "Eval Tuner: Single",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/eval_run.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--bundle-dir", ".tuning/single_intersection_constant_seed/pbt_bundle",
+        "--config", "environments/single_intersection/config.yaml",
+        "--outdir", ".tuning/single_intersection_constant_seed"
       ]
     }
   ]
 }
+ 
