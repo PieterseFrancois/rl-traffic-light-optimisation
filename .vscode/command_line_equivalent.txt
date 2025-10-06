@@ -1,0 +1,30 @@
+
+# 1) RLlib Independent PPO vs Baseline (single_intersection)
+python .\debug_entry.py `
+  --config-file environments/single_intersection/config.yaml `
+  --hyperparams-file environments/single_intersection/hyperparams.yaml `
+  --outdir .rllib_independent_ppo_test/single_intersection_constant_seed
+
+# 2) Double Trouble: RLlib Independent PPO vs Baseline (double_intersection)
+python .\debug_entry.py `
+  --config-file environments/double_intersection/config.yaml `
+  --hyperparams-file environments/double_intersection/hyperparams.yaml `
+  --outdir .rllib_independent_ppo_test/double_trouble_flat_model_quick
+
+# 3) Ingolstadt: RLlib Independent PPO vs Baseline
+python .\debug_entry.py `
+  --config-file environments/ingolstadt/config.yaml `
+  --hyperparams-file environments/ingolstadt/hyperparams.yaml `
+  --outdir .ingolstadt/constant_seed
+
+# 4) Tuner: Single (PBT)
+python .\utils\tune_pbt.py `
+  --config environments/single_intersection/config.yaml `
+  --hyper environments/single_intersection/hyperparams.yaml `
+  --outdir .tuning/single_intersection_constant_seed
+
+# 5) Eval Tuner: Single
+python .\eval_run.py `
+  --bundle-dir ".tuning/single_intersection_constant_seed/pbt_bundle" `
+  --config environments/single_intersection/config.yaml `
+  --outdir .tuning/single_intersection_constant_seed
