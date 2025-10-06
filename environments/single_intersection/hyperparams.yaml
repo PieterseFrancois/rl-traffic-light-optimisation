@@ -7,14 +7,24 @@ training:
 trainer:
   num_workers: 0
   rollout_fragment_length: 400
-  train_batch_size: 8000
+  train_batch_size: 16000
   minibatch_size: 512
-  num_epochs: 4
-  learning_rate: 3e-4
+  num_epochs: 2
+  learning_rate: 5e-5
   gamma: 0.99   # Discount factor of Markov decision process
   batch_mode: complete_episodes  # complete_episodes | truncate_episodes
 
 model:
-  policy_head_hidden_sizes: [128, 128]
-  value_head_hidden_sizes: [128, 128]
-  hidden_activation: Tanh
+  # policy_head_hidden_sizes: [128, 128]
+  # value_head_hidden_sizes: [128, 128]
+  # hidden_activation: Tanh
+
+  lane_mlp_hiddens: [64]
+  lane_activation: Tanh
+  node_dim: 128
+  gnn_layers: 2
+  gnn_activation: Tanh
+  use_self_loop: false
+  pi_hiddens: [128, 128]
+  vf_hiddens: [128, 128]
+  head_activation: Tanh
