@@ -11,15 +11,7 @@ from policy.independent_ppo_setup import build_trainer, TrainerParameters
 
 # --- model registries (so we can pick the right register_fn from the bundle meta) ---
 from models.masked_flat_model import register_flat_model, MODEL_NAME as FLAT_MODEL_NAME
-from models.masked_embed_model import register_embedder_model, EMBED_MODEL_NAME
-from models.masked_flat_neighbour_concat import (
-    register_neighbour_flat_model,
-    MODEL_NAME as NEIGHBOUR_FLAT_MODEL_NAME,
-)
-from models.masked_gnn_neighbour_model import (
-    register_neighbour_gnn_model,
-    MODEL_NAME as NEIGHBOUR_GNN_MODEL_NAME,
-)
+
 from models.masked_gnn_attention_model import (
     register_attention_gnn_model,
     MODEL_NAME as ATTENTION_GNN_MODEL_NAME,
@@ -36,9 +28,6 @@ from modules.network_state import NetworkResults  # expects XMLs in output folde
 
 MODEL_REGISTRY = {
     FLAT_MODEL_NAME: register_flat_model,
-    EMBED_MODEL_NAME: register_embedder_model,
-    NEIGHBOUR_FLAT_MODEL_NAME: register_neighbour_flat_model,
-    NEIGHBOUR_GNN_MODEL_NAME: register_neighbour_gnn_model,
     ATTENTION_GNN_MODEL_NAME: register_attention_gnn_model,
 }
 
