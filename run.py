@@ -30,7 +30,12 @@ from modules.model_manager import ModelManager
 from modules.network_state import NetworkResults
 
 
-def run(config_file: str, hyperparams_file: str, outdir: str, freeflow_speed_mps: float = None):
+def run(
+    config_file: str,
+    hyperparams_file: str,
+    outdir: str,
+    freeflow_speed_mps: float = None,
+):
 
     outdir = Path(outdir)
     plots_dir = outdir / "plots"
@@ -155,4 +160,3 @@ def run(config_file: str, hyperparams_file: str, outdir: str, freeflow_speed_mps
 
     print(f"\n[done] results in {outdir.resolve()}")
     print(f"[done] network CSVs & KPIs in {net_csv_dir.resolve()}")
-

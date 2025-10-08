@@ -530,4 +530,3 @@ class NetworkResults:
             **{f"trip_{k}": v for k, v in trip_kpis.items()},
             **{f"summary_{k}": v for k, v in sum_kpis.items()},
         }
-

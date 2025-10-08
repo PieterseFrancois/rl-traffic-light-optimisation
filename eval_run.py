@@ -32,7 +32,12 @@ MODEL_REGISTRY = {
 }
 
 
-def run_eval_only(bundle_run_dir: str, new_config_file: str, outdir: str, freeflow_speed_mps: float | None = None):
+def run_eval_only(
+    bundle_run_dir: str,
+    new_config_file: str,
+    outdir: str,
+    freeflow_speed_mps: float | None = None,
+):
     outdir = Path(outdir)
     plots_dir = outdir / "plots"
     csv_dir = outdir / "csv"
@@ -46,7 +51,9 @@ def run_eval_only(bundle_run_dir: str, new_config_file: str, outdir: str, freefl
     # Load bundle artifacts (meta + checkpoint path)
     mm = ModelManager()
     bundle_dir = Path(bundle_run_dir)
-    saved_env_kwargs, model_name, custom_model_cfg, ckpt_path = mm.load_bundle_artifacts(bundle_run_dir=bundle_dir)
+    saved_env_kwargs, model_name, custom_model_cfg, ckpt_path = (
+        mm.load_bundle_artifacts(bundle_run_dir=bundle_dir)
+    )
 
     # Pick the correct register function from the saved model_name
     if model_name not in MODEL_REGISTRY:
@@ -54,7 +61,10 @@ def run_eval_only(bundle_run_dir: str, new_config_file: str, outdir: str, freefl
     register_fn = MODEL_REGISTRY[model_name]
 
     # Build a fresh trainer (classic stack) with the NEW env kwargs, then restore weights
-    training_model = {"custom_model": model_name, "custom_model_config": custom_model_cfg}
+    training_model = {
+        "custom_model": model_name,
+        "custom_model_config": custom_model_cfg,
+    }
     # eval-time trainer params (min requirements; no training will happen)
     tp = TrainerParameters(
         num_workers=0,
@@ -68,8 +78,8 @@ def run_eval_only(bundle_run_dir: str, new_config_file: str, outdir: str, freefl
         register_fn=register_fn,
         model_name=model_name,
         custom_model_config=custom_model_cfg,
-        ckpt_path=ckpt_path,         # from bundle
-        env_kwargs=env_kwargs_new,   # NEW SUMO cfg here
+        ckpt_path=ckpt_path,  # from bundle
+        env_kwargs=env_kwargs_new,  # NEW SUMO cfg here
         trainer_params=tp,
     )
 
@@ -124,11 +134,30 @@ def run_eval_only(bundle_run_dir: str, new_config_file: str, outdir: str, freefl
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Evaluate a saved RLlib bundle on a NEW SUMO config (baseline + trained).")
-    ap.add_argument("--bundle-dir", type=str, required=True, help="Path to saved bundle run dir (contains meta.json).")
-    ap.add_argument("--config-file", type=str, required=True, help="YAML for NEW evaluation SUMO config.")
-    ap.add_argument("--outdir", type=str, required=True, help="Output directory for CSVs/plots.")
-    ap.add_argument("--freeflow-speed-mps", type=float, default=None, help="Optional free-flow speed for TTI KPI.")
+    ap = argparse.ArgumentParser(
+        description="Evaluate a saved RLlib bundle on a NEW SUMO config (baseline + trained)."
+    )
+    ap.add_argument(
+        "--bundle-dir",
+        type=str,
+        required=True,
+        help="Path to saved bundle run dir (contains meta.json).",
+    )
+    ap.add_argument(
+        "--config-file",
+        type=str,
+        required=True,
+        help="YAML for NEW evaluation SUMO config.",
+    )
+    ap.add_argument(
+        "--outdir", type=str, required=True, help="Output directory for CSVs/plots."
+    )
+    ap.add_argument(
+        "--freeflow-speed-mps",
+        type=float,
+        default=None,
+        help="Optional free-flow speed for TTI KPI.",
+    )
     args = ap.parse_args()
 
     run_eval_only(

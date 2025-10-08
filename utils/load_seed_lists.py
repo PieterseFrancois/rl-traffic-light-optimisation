@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def load_int_list(filepath: str | Path) -> list[int]:
     """
     Load a text file containing one integer per line and return a list of ints.

@@ -23,14 +23,20 @@ from models.masked_gnn_attention_model import (
 ray.shutdown()
 
 
-def build_base_config(env_kwargs: dict, trainer_params: TrainerParameters, model_cfg: dict) -> PPOConfig:
+def build_base_config(
+    env_kwargs: dict, trainer_params: TrainerParameters, model_cfg: dict
+) -> PPOConfig:
     # Keep your existing builder, but no samples here. We’ll inject Tune samplers via algo_overrides.
     return build_independent_ppo_config(
         env_kwargs=env_kwargs,
         register_fn=register_attention_gnn_model,
-        training_model={"custom_model": ATTN_GNN_NAME, "custom_model_config": model_cfg},
+        training_model={
+            "custom_model": ATTN_GNN_NAME,
+            "custom_model_config": model_cfg,
+        },
         trainer_params=trainer_params,
     )
+
 
 def main(config_file: str, hyperparams_file: str, outdir: str):
     ray.init(ignore_reinit_error=True, include_dashboard=False)
@@ -58,37 +64,36 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
     )
 
     base_cfg = (
-        base_cfg
-        .resources(num_cpus_for_main_process=1, num_gpus=0) 
+        base_cfg.resources(num_cpus_for_main_process=1, num_gpus=0)
         .env_runners(
-            num_env_runners=4,            # was 0 (local only)
-            num_envs_per_env_runner=2,    # vectorise inside each runner
-            num_cpus_per_env_runner=1,    # 4*2 envs ~ 8 CPUs per trial
+            num_env_runners=4,  # was 0 (local only)
+            num_envs_per_env_runner=2,  # vectorise inside each runner
+            num_cpus_per_env_runner=1,  # 4*2 envs ~ 8 CPUs per trial
             num_gpus_per_env_runner=0,
             gym_env_vectorize_mode="SYNC",
-            rollout_fragment_length='auto',  # auto-adjust to env steps
+            rollout_fragment_length="auto",  # auto-adjust to env steps
         )
         .evaluation(
-        evaluation_interval=1,                    # eval every iter
-        evaluation_duration=4,                    # episodes
-        evaluation_duration_unit="episodes",
-        evaluation_parallel_to_training=False,
-        evaluation_config={
-            "env_config": {
-                "env_kwargs": {
-                    **env_kwargs,
-                    "mode": "eval",               # <- switch to eval mode
+            evaluation_interval=1,  # eval every iter
+            evaluation_duration=4,  # episodes
+            evaluation_duration_unit="episodes",
+            evaluation_parallel_to_training=False,
+            evaluation_config={
+                "env_config": {
+                    "env_kwargs": {
+                        **env_kwargs,
+                        "mode": "eval",  # <- switch to eval mode
+                    }
                 }
-            }
-        }
-    )
+            },
+        )
     )
 
     # ---- PBT scheduler (modern Tune) ----
     METRIC = "evaluation/env_runners/episode_reward_mean"
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
-        perturbation_interval=3,     # iterations between exploit/explore
+        perturbation_interval=3,  # iterations between exploit/explore
         metric=METRIC,
         mode="max",
         hyperparam_mutations={
@@ -104,23 +109,25 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
         },
         # Optional: keep some mutations consistent ratios
         synch=False,
-        quantile_fraction=0.25,   
+        quantile_fraction=0.25,
     )
 
     # ---- Param space: use PPOConfig().to_dict() + selective samples ----
     # Start from your base config and let Tune mutate the keys above.
     param_space = base_cfg.to_dict()
     # Put initial sample points to seed the population (PBT will kick off from here):
-    param_space.update({
-        "lr": tune.loguniform(1e-5, 3e-4),
-        "gamma": tune.choice([0.97, 0.99]),
-        "minibatch_size": tune.qrandint(128, 512, 64),
-        "train_batch_size": tune.qrandint(4000, 16000, 1000),
-        # "rollout_fragment_length": tune.qrandint(200, 800, 100),
-        "num_epochs": tune.randint(2, 6),
-        "clip_param": tune.uniform(0.15, 0.35),
-        "entropy_coeff": tune.uniform(0.0, 0.01),
-    })
+    param_space.update(
+        {
+            "lr": tune.loguniform(1e-5, 3e-4),
+            "gamma": tune.choice([0.97, 0.99]),
+            "minibatch_size": tune.qrandint(128, 512, 64),
+            "train_batch_size": tune.qrandint(4000, 16000, 1000),
+            # "rollout_fragment_length": tune.qrandint(200, 800, 100),
+            "num_epochs": tune.randint(2, 6),
+            "clip_param": tune.uniform(0.15, 0.35),
+            "entropy_coeff": tune.uniform(0.0, 0.01),
+        }
+    )
 
     storage_path = Path(outdir) / "tune"
     storage_path.mkdir(parents=True, exist_ok=True)
@@ -145,12 +152,12 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
             stop={"training_iteration": hps["training_params"].max_iterations},
         ),
         tune_config=TuneConfig(
-            num_samples=12,          # population size
+            num_samples=12,  # population size
             scheduler=pbt,
-            reuse_actors=False,     # safer with PBT exploit/explore
+            reuse_actors=False,  # safer with PBT exploit/explore
             max_concurrent_trials=4,
             trial_name_creator=lambda t: f"{t.trainable_name}_{t.trial_id[:5]}",
-            trial_dirname_creator=lambda t: t.trial_id,   # shortest, unique
+            trial_dirname_creator=lambda t: t.trial_id,  # shortest, unique
         ),
     )
 
@@ -169,9 +176,20 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
     bundle_root.mkdir(parents=True, exist_ok=True)
 
     # Use the same model name/config and env kwargs you trained with
-    training_model = {"custom_model": ATTN_GNN_NAME, "custom_model_config": hps["model_params"]}
+    training_model = {
+        "custom_model": ATTN_GNN_NAME,
+        "custom_model_config": hps["model_params"],
+    }
 
-    TUNED_KEYS = ['lr', 'gamma', 'minibatch_size', 'train_batch_size', 'num_epochs', 'clip_param', 'entropy_coeff']
+    TUNED_KEYS = [
+        "lr",
+        "gamma",
+        "minibatch_size",
+        "train_batch_size",
+        "num_epochs",
+        "clip_param",
+        "entropy_coeff",
+    ]
 
     tuned_hps = {k: best.config.get(k, None) for k in TUNED_KEYS}
 
@@ -181,15 +199,20 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
         bundle_dir_rel=bundle_root,
         model_name=training_model["custom_model"],
         custom_model_config=training_model["custom_model_config"],
-        env_kwargs=env_kwargs,   # already resolved (absolute) earlier
-        notes={"metric": METRIC, "metric_value": float(best.metrics.get(METRIC, float("nan"))),
-            "config": tuned_hps},   # keeps tuned hypers for traceability
+        env_kwargs=env_kwargs,  # already resolved (absolute) earlier
+        notes={
+            "metric": METRIC,
+            "metric_value": float(best.metrics.get(METRIC, float("nan"))),
+            "config": tuned_hps,
+        },  # keeps tuned hypers for traceability
     )
 
     print(f"[tune-pbt] bundle saved to {str(bundle_path)}")
 
+
 if __name__ == "__main__":
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", required=True)
     ap.add_argument("--hyper", required=True)

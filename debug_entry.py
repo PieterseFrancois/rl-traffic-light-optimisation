@@ -1,6 +1,7 @@
 import argparse
 from run import run
 
+
 def main():
     ap = argparse.ArgumentParser(
         description="RLlib independent PPO vs baseline on MultiTLSParallelEnv"
@@ -22,6 +23,7 @@ def main():
         outdir=args.outdir,
         freeflow_speed_mps=args.freeflow_speed_mps,
     )
+
 
 if __name__ == "__main__":
     main()

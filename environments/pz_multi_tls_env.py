@@ -326,7 +326,9 @@ class MultiTLSParallelEnv(ParallelEnv):
                     print(f"[info] Using fixed seed {use_seed} for SUMO")
 
             elif self.training_seeds is not None and len(self.training_seeds) > 0:
-                use_seed = self.training_seeds[self._seed_index % len(self.training_seeds)]
+                use_seed = self.training_seeds[
+                    self._seed_index % len(self.training_seeds)
+                ]
                 self._seed_index += 1
 
                 if self._VERBOSE_SEED:
