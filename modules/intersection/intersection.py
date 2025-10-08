@@ -246,6 +246,8 @@ class IntersectionModule:
             total_queue_length=kpis.total_queue_length,
             max_wait_s=kpis.max_wait_time_s,
             lane_measures=current_lane_states,
+            action=self.action_module.active_phase_memory,
+            in_transition=self.action_module.in_transition,
         )
 
         self.memory_module.log(log_entry)

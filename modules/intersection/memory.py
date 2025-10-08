@@ -6,6 +6,7 @@ import bisect
 from dataclasses import dataclass, asdict
 
 from .state import LaneMeasures
+from .action import ActivePhaseMemory
 
 
 @dataclass
@@ -20,6 +21,8 @@ class LogEntry:
         total_queue_length (int): Total queue length across all lanes at time t.
         max_wait_s (float): Maximum waiting time among all lanes at time t.
         lane_measures (list[LaneMeasures]): List of LaneMeasures for each approach lane at time t.
+        action (ActivePhaseMemory | None): The action taken at time t, if any.
+        in_transition (bool): Whether the traffic light is in transition at time t.
     """
 
     t: float
@@ -28,6 +31,8 @@ class LogEntry:
     total_queue_length: int
     max_wait_s: float
     lane_measures: list[LaneMeasures]
+    action: ActivePhaseMemory | None
+    in_transition: bool
 
 
 class MemoryModule:
@@ -106,6 +111,8 @@ class MemoryModule:
             total_queue_length=self._logs[-1].total_queue_length,
             max_wait_s=self._logs[-1].max_wait_s,
             lane_measures=self._logs[-1].lane_measures,
+            action=self._logs[-1].action,
+            in_transition=self._logs[-1].in_transition,
         )
 
     def export_csv(self, filepath: str) -> None:
