@@ -181,7 +181,7 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
 
         lane_mlp_hiddens = list(c.get("lane_mlp_hiddens"))
         lane_act = str(c.get("lane_activation"))
-        lane_attn_hiddens = int(c.get("lane_attn_hiddens"))
+        lane_attn_neurons = int(c.get("lane_attn_neurons"))
 
         self.D = int(c.get("node_dim"))
         g_layers = int(c.get("gnn_layers"))
@@ -197,7 +197,7 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
             lane_mlp_hiddens=lane_mlp_hiddens,
             out_dim=self.D,
             act_name=lane_act,
-            attn_hidden=lane_attn_hiddens,
+            attn_hidden=lane_attn_neurons,
         )
 
         # GAT layers (neighbour -> ego)

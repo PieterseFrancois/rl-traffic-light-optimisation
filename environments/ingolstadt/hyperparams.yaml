@@ -21,7 +21,7 @@ model:
 
   lane_mlp_hiddens: [32] # Per-lane MLP hidden layers for producing lane embeddings
   lane_activation: ReLU
-  lane_attn_hiddens: [64] # Hidden layer size for attention mechanism
+  lane_attn_neurons: 64 # Hidden layer size for attention mechanism
   node_dim: 128
   gnn_layers: 2
   gnn_activation: ReLU
