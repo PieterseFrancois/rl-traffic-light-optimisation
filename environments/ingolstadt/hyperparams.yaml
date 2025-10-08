@@ -19,12 +19,13 @@ model:
   # value_head_hidden_sizes: [128, 128]
   # hidden_activation: Tanh
 
-  lane_mlp_hiddens: [64]
-  lane_activation: Tanh
+  lane_mlp_hiddens: [32]
+  lane_activation: ReLU
+  lane_attn_hiddens: [64]
   node_dim: 128
   gnn_layers: 2
-  gnn_activation: Tanh
-  use_self_loop: true
+  gnn_activation: ReLU
+  use_self_loop: True
   pi_hiddens: [128, 128]
   vf_hiddens: [128, 128]
-  head_activation: Tanh
+  head_activation: ReLU

@@ -62,9 +62,9 @@ intersections:
 graph:
   neighbour_scope: ALL     # ALL | UPSTREAM | DOWNSTREAM
   neighbour_lag_steps: 0   # Time lag to consider neighbours (steps), 0 = instantaneous
-  hops: 1
+  hops: 2
   fixed_discount: 0.9     # Discount factor per hop if model does not use GAT   (0.0, 1.0]
-  allow_self_loops: false  # Usually false unless specif reason to include self-loops
+  allow_self_loops: true  # To allow own state to be included in GNN message passing
   edges:
     - [tlN1,  tlN2]
     - [tlN2,  tlN1]
