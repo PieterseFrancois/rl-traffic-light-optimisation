@@ -24,6 +24,7 @@ from utils.baseline_analysis import sumo_baseline_configured_tls
 from utils.trained_analysis import evaluate_trained_scenario
 
 from utils.plot import plot_report, PlotSelection, PlotMask
+from utils.load_seed_lists import load_int_list as load_seeds
 
 from modules.model_manager import ModelManager
 from modules.network_state import NetworkResults
@@ -41,6 +42,12 @@ def run(config_file: str, hyperparams_file: str, outdir: str, freeflow_speed_mps
 
     # Build hyperparameters
     hyperparams = load_hyperparameters(yaml_path=hyperparams_file)
+
+    # Load training seeds
+    TRAINING_SEEDS_PATH: str = "environments/training_seeds.txt"
+    training_seeds: list[int] = load_seeds(TRAINING_SEEDS_PATH)
+
+    env_kwargs["training_seeds"] = training_seeds
 
     # RLlib trainer
     ray.init(ignore_reinit_error=True, include_dashboard=False)

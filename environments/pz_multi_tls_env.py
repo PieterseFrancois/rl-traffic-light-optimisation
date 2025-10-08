@@ -32,6 +32,7 @@ class MultiTLSParallelEnv(ParallelEnv):
         traffic_graph_config: TrafficGraphConfig,
         episode_length: int,
         ticks_per_decision: int = 1,
+        training_seeds: list[int] | None = None,
     ):
         super().__init__()
 
@@ -79,6 +80,12 @@ class MultiTLSParallelEnv(ParallelEnv):
         self._sumo_step_size_s: float = 0.0
 
         self._log_directory: Path | str | None = None
+
+        # Seed management
+        self._FIXED_SEED = False
+        self._VERBOSE_SEED = True
+        self.training_seeds: list[int] | None = training_seeds
+        self._seed_index = 0
 
     # ---- PettingZoo API spaces ---- #
     def observation_space(self, agent: str):
@@ -312,12 +319,30 @@ class MultiTLSParallelEnv(ParallelEnv):
                 ),
             )
         else:
-            # Randomise seed during training
-            rng = random.Random()
+            if self._FIXED_SEED:
+                use_seed = self.sumo_config.seed
+
+                if self._VERBOSE_SEED:
+                    print(f"[info] Using fixed seed {use_seed} for SUMO")
+
+            elif self.training_seeds is not None and len(self.training_seeds) > 0:
+                use_seed = self.training_seeds[self._seed_index % len(self.training_seeds)]
+                self._seed_index += 1
+
+                if self._VERBOSE_SEED:
+                    print(f"[info] Using training seed {use_seed} for SUMO")
+
+            else:
+                rng = random.Random()
+                use_seed = rng.randint(1, 2**31 - 1)
+
+                if self._VERBOSE_SEED:
+                    print(f"[warn] Using random seed {use_seed} for SUMO")
+
             training_config = SUMOConfig(
                 sumocfg_filepath=self.sumo_config.sumocfg_filepath,
                 nogui=self.sumo_config.nogui,
-                seed=rng.randint(1, 2**31 - 1), 
+                seed=use_seed,
                 time_to_teleport=self.sumo_config.time_to_teleport,
             )
             start_sumo(training_config)
