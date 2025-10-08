@@ -19,24 +19,6 @@ from models.masked_flat_model import (
     MASKED_FLAT_CUSTOM_CONFIG,
 )
 
-from models.masked_embed_model import (
-    register_embedder_model,
-    MASKED_EMBED_CUSTOM_CONFIG,
-    EMBED_MODEL_NAME,
-)
-
-from models.masked_flat_neighbour_concat import (
-    register_neighbour_flat_model,
-    MODEL_NAME as NEIGHBOUR_MODEL_NAME,
-    NEIGHBOUR_FLAT_CUSTOM_CONFIG,
-)
-
-from models.masked_gnn_neighbour_model import (
-    register_neighbour_gnn_model,
-    MODEL_NAME as NEIGHBOUR_GNN_MODEL_NAME,
-    NEIGHBOUR_GNN_CUSTOM_CONFIG,
-)
-
 from models.masked_gnn_attention_model import (
     register_attention_gnn_model,
     MODEL_NAME as ATTENTION_GNN_MODEL_NAME,
@@ -93,27 +75,6 @@ def main():
         "custom_model": MODEL_NAME,
         "custom_model_config": hyperparams.get("model_params"),
     }
-
-    # neighbour concat flat
-    # register_fn = register_neighbour_flat_model
-    # training_model = {
-    #     "custom_model": NEIGHBOUR_MODEL_NAME,
-    #     "custom_model_config": NEIGHBOUR_FLAT_CUSTOM_CONFIG,
-    # }
-
-    # lane embedder + attention pool
-    # register_fn = register_embedder_model
-    # training_model = {
-    #     "custom_model": EMBED_MODEL_NAME,
-    #     "custom_model_config": MASKED_EMBED_CUSTOM_CONFIG,
-    # }
-
-    # neighbour GNN (message passing)
-    # register_fn = register_neighbour_gnn_model
-    # training_model = {
-    #     "custom_model": NEIGHBOUR_GNN_MODEL_NAME,
-    #     "custom_model_config": NEIGHBOUR_GNN_CUSTOM_CONFIG,
-    # }
 
     # small attention per node + GNN
     # register_fn = register_attention_gnn_model
