@@ -7,10 +7,10 @@ training:
 trainer:
   num_workers: 0
   rollout_fragment_length: 400
-  train_batch_size: 16000
+  train_batch_size: 12000
   minibatch_size: 512
   num_epochs: 2
-  learning_rate: 5e-6
+  learning_rate: 5e-4
   gamma: 0.99   # Discount factor of Markov decision process
   batch_mode: complete_episodes  # complete_episodes | truncate_episodes
 
@@ -19,13 +19,12 @@ model:
   # value_head_hidden_sizes: [128, 128]
   # hidden_activation: Tanh
 
-  lane_mlp_hiddens: [32]
+  lane_mlp_hiddens: [32] # Per-lane MLP hidden layers for producing lane embeddings
   lane_activation: ReLU
-  lane_attn_hiddens: [64]
+  lane_attn_hiddens: [64] # Hidden layer size for attention mechanism
   node_dim: 128
   gnn_layers: 2
   gnn_activation: ReLU
   use_self_loop: True
-  pi_hiddens: [128, 128]
-  vf_hiddens: [128, 128]
-  head_activation: ReLU
+  actor_hiddens: [128, 128] # Policy head hidden layers
+  critic_hiddens: [128, 128] # Value head hidden layers
