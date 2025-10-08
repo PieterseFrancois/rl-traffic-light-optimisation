@@ -36,6 +36,13 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
     ray.init(ignore_reinit_error=True, include_dashboard=False)
 
     env_kwargs = load_env_config(yaml_path=config_file)
+    # TRAIN_SEEDS = [11, 23, 37, 59]
+    # EVAL_SEEDS = [71, 83]
+    TRAIN_SEEDS = [42]
+    EVAL_SEEDS = [42]
+    env_kwargs["train_seeds"] = TRAIN_SEEDS
+    env_kwargs["eval_seeds"] = EVAL_SEEDS
+    env_kwargs["mode"] = "train"
 
     # EEnsure env_kwargs["sumo_config"].sumocfg_filepath is changed to absolute path - currently relative to base dir
     sumocfg_path = Path(env_kwargs["sumo_config"].sumocfg_filepath)
@@ -60,14 +67,29 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
             num_gpus_per_env_runner=0,
             gym_env_vectorize_mode="SYNC",
             rollout_fragment_length='auto',  # auto-adjust to env steps
-        )    
+        )
+        .evaluation(
+        evaluation_interval=1,                    # eval every iter
+        evaluation_duration=4,                    # episodes
+        evaluation_duration_unit="episodes",
+        evaluation_parallel_to_training=False,
+        evaluation_config={
+            "env_config": {
+                "env_kwargs": {
+                    **env_kwargs,
+                    "mode": "eval",               # <- switch to eval mode
+                }
+            }
+        }
+    )
     )
 
     # ---- PBT scheduler (modern Tune) ----
+    METRIC = "evaluation/env_runners/episode_reward_mean"
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
         perturbation_interval=3,     # iterations between exploit/explore
-        metric="env_runners/episode_reward_mean",
+        metric=METRIC,
         mode="max",
         hyperparam_mutations={
             # Safe, PPO-relevant mutations (global for all independent policies)
@@ -133,9 +155,8 @@ def main(config_file: str, hyperparams_file: str, outdir: str):
     )
 
     results = tuner.fit()
-    print("Best result:", results.get_best_result("env_runners/episode_reward_mean", "max").metrics)
+    print("Best result:", results.get_best_result(METRIC, "max").metrics)
 
-    METRIC = "env_runners/episode_reward_mean"
     best = results.get_best_result(METRIC, "max")
 
     # Restore the trained PPO from the best checkpoint
