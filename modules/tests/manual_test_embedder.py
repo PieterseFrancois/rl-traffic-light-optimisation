@@ -12,7 +12,7 @@ from modules.intersection.preprocessor import (
     PreprocessorConfig,
     PreprocessorNormalisationParameters,
 )
-from modules.intersection.feature_extractor.embedder import (
+from modules.intersection.depreciated.embedder import (
     LaneSetAttentionEmbedder,
     EmbedderHyperparameters,
 )

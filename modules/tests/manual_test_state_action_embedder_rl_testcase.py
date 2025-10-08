@@ -44,11 +44,11 @@ from modules.intersection.reward import (
 )
 
 # NEW: import your SB3 feature extractor that wraps the embedder
-from modules.intersection.feature_extractor.feature_extractor import (
+from modules.intersection.depreciated.feature_extractor import (
     FeatureExtractor,
     FeatureExtractorConfig,
 )
-from modules.intersection.feature_extractor.embedder import EmbedderHyperparameters
+from modules.intersection.depreciated.embedder import EmbedderHyperparameters
 
 
 # ============================================================
