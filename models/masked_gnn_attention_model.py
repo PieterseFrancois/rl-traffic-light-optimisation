@@ -1,6 +1,6 @@
 # ============================================================
 #  DISCLAIMER:
-#  Whilst this model was originally written without the use of a LLM, 
+#  Whilst this model was originally written without the use of a LLM,
 #  a LLM code review was used. During this review, the model was slightly
 #  refactored for clarity, and comments/docstrings were added.
 #  No changes were made to the model architecture or logic.
@@ -65,9 +65,7 @@ class _LaneAttentionEncoder(nn.Module):
 
     def forward(self, lanes: torch.Tensor, lane_mask: torch.Tensor) -> torch.Tensor:
         lane_embeddings = self.mlp(lanes)  # [B, L, D]
-        attn_scores = self.v(self.tanh(self.W(lane_embeddings))).squeeze(
-            -1
-        )  # [B, L]
+        attn_scores = self.v(self.tanh(self.W(lane_embeddings))).squeeze(-1)  # [B, L]
         attn_scores = attn_scores.masked_fill(lane_mask <= 0, float("-inf"))
         attn_weights = torch.softmax(attn_scores, dim=1)  # [B, L]
         attn_weights = torch.where(
@@ -75,9 +73,7 @@ class _LaneAttentionEncoder(nn.Module):
             attn_weights,
             torch.zeros_like(attn_weights),
         )  # all-masked safety
-        encoded = (lane_embeddings * attn_weights.unsqueeze(-1)).sum(
-            dim=1
-        )  # [B, D]
+        encoded = (lane_embeddings * attn_weights.unsqueeze(-1)).sum(dim=1)  # [B, D]
         return encoded
 
 
@@ -267,6 +263,7 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
 
     def value_function(self):
         return self._value_out
+
 
 def register_attention_gnn_model():
     ModelCatalog.register_custom_model(MODEL_NAME, MaskedNeighbourGNN)
