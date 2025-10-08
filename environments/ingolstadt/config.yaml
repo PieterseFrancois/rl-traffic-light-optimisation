@@ -66,6 +66,8 @@ graph:
   fixed_discount: 0.9     # Discount factor per hop if model does not use GAT   (0.0, 1.0]
   allow_self_loops: true  # To allow own state to be included in GNN message passing
   edges:
+    - [tlN1,  tlN3]
+    - [tlN3,  tlN1]
     - [tlN1,  tlN2]
     - [tlN2,  tlN1]
     - [tlN2,  tlN10]
