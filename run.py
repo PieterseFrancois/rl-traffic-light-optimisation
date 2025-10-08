@@ -13,34 +13,9 @@ from utils.training import (
     TrainingResult,
 )
 
-from models.masked_flat_model import (
-    register_flat_model,
-    MODEL_NAME,
-    MASKED_FLAT_CUSTOM_CONFIG,
-)
-
-from models.masked_embed_model import (
-    register_embedder_model,
-    MASKED_EMBED_CUSTOM_CONFIG,
-    EMBED_MODEL_NAME,
-)
-
-from models.masked_flat_neighbour_concat import (
-    register_neighbour_flat_model,
-    MODEL_NAME as NEIGHBOUR_MODEL_NAME,
-    NEIGHBOUR_FLAT_CUSTOM_CONFIG,
-)
-
-from models.masked_gnn_neighbour_model import (
-    register_neighbour_gnn_model,
-    MODEL_NAME as NEIGHBOUR_GNN_MODEL_NAME,
-    NEIGHBOUR_GNN_CUSTOM_CONFIG,
-)
-
 from models.masked_gnn_attention_model import (
     register_attention_gnn_model,
     MODEL_NAME as ATTENTION_GNN_MODEL_NAME,
-    NEIGHBOUR_GNN_CUSTOM_CONFIG as ATTENTION_GNN_CUSTOM_CONFIG,
 )
 
 from utils.env_config_loader import load_env_config
