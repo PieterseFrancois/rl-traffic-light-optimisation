@@ -15,13 +15,19 @@ python .\debug_entry.py `
 python .\debug_entry.py `
   --config-file environments/ingolstadt/config.yaml `
   --hyperparams-file environments/ingolstadt/hyperparams.yaml `
-  --outdir .ingolstadt/constant_seed
+  --outdir .ingolstadt/constant_seed_GAT
 
 # 4) Tuner: Single (PBT)
 python .\utils\tune_pbt.py `
   --config environments/single_intersection/config.yaml `
   --hyper environments/single_intersection/hyperparams.yaml `
   --outdir .tuning/single_intersection_constant_seed
+
+python .\tune_pbt.py `
+  --config environments/ingolstadt/config.yaml `
+  --hyper environments/ingolstadt/hyperparams.yaml `
+  --outdir .ingolstadt/ingolstadt_pbt_random_seed
+
 
 # 5) Eval Tuner: Single
 python .\eval_run.py `
