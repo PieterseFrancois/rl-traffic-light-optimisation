@@ -5,24 +5,21 @@ import ray
 from ray.rllib.algorithms.ppo import PPO
 
 from environments.env_wrappers import make_rllib_env
-from policy.independent_ppo_setup import build_trainer, TrainerParameters
+from policy.independent_ppo_setup import build_trainer
 
 from utils.training import (
     train_until_converged,
-    TrainingHyperparameters,
     TrainingResult,
 )
 
 from models.masked_flat_model import (
     register_flat_model,
-    MODEL_NAME,
-    MASKED_FLAT_CUSTOM_CONFIG,
+    MODEL_NAME as FLAT_MODEL_NAME,
 )
 
 from models.masked_gnn_attention_model import (
     register_attention_gnn_model,
     MODEL_NAME as ATTENTION_GNN_MODEL_NAME,
-    NEIGHBOUR_GNN_CUSTOM_CONFIG as ATTENTION_GNN_CUSTOM_CONFIG,
 )
 
 from utils.env_config_loader import load_env_config
@@ -72,7 +69,7 @@ def main():
     # flat masked model
     register_fn = register_flat_model
     training_model = {
-        "custom_model": MODEL_NAME,
+        "custom_model": FLAT_MODEL_NAME,
         "custom_model_config": hyperparams.get("model_params"),
     }
 
@@ -80,7 +77,7 @@ def main():
     # register_fn = register_attention_gnn_model
     # training_model = {
     #     "custom_model": ATTENTION_GNN_MODEL_NAME,
-    #     "custom_model_config": ATTENTION_GNN_CUSTOM_CONFIG,
+    #     "custom_model_config": hyperparams.get("model_params"),
     # }
 
     print("[train] RLlib PPO training…")
