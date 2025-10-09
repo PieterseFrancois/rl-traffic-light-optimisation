@@ -41,6 +41,7 @@ class TrainingResult:
     best_moving_average: float
     stopped_reason: str
     best_checkpoint_path: Path
+    episode_returns: list[float] = None
 
 
 def train_until_converged(
@@ -79,6 +80,8 @@ def train_until_converged(
         ckpt_dir = Path(ckpt_dir)
         ckpt_dir.mkdir(parents=True, exist_ok=True)
 
+    episode_returns = []
+
     for i in range(1, parameters.max_iterations + 1):
         result = trainer.train()
         episode_return = float(
@@ -87,6 +90,7 @@ def train_until_converged(
         if math.isnan(episode_return):
             # If env is still warming up, treat as no info.
             episode_return = -math.inf
+        episode_returns.append(episode_return)
 
         returns.append(episode_return)
         moving_average: float = sum(returns) / max(1, len(returns))
@@ -127,4 +131,5 @@ def train_until_converged(
         best_moving_average=best_moving_average,
         stopped_reason=stopped_reason,
         best_checkpoint_path=best_ckpt_path,
+        episode_returns=episode_returns,
     )

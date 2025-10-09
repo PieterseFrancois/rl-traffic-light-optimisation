@@ -87,6 +87,13 @@ def run(
 
     best_ckpt_path: Path = training_result.best_checkpoint_path
 
+    #Save episode returns to a csv
+    episode_returns: list[float] = training_result.episode_returns
+    with open(outdir / "episode_returns.csv", "w") as f:
+        f.write("episode_return\n")
+        for r in episode_returns:
+            f.write(f"{r}\n")
+
     # --- Save a self-contained bundle (checkpoint + meta.json) ---
 
     print(f"[bundle] saved to {str(best_ckpt_path)}")
