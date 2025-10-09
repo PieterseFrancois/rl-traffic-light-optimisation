@@ -1,20 +1,32 @@
 training:
   max_iterations: 50
-  early_stopping_patience: 3
+  early_stopping_patience: 5
   minimum_improvement: 0.01
   moving_window_size: 10
 
 trainer:
   num_workers: 0
   rollout_fragment_length: 400
-  train_batch_size: 8000
+  train_batch_size: 12000
   minibatch_size: 512
-  num_epochs: 4
-  learning_rate: 3e-4
+  num_epochs: 2
+  learning_rate: 5e-6
   gamma: 0.99   # Discount factor of Markov decision process
   batch_mode: complete_episodes  # complete_episodes | truncate_episodes
 
 model:
-  policy_head_hidden_sizes: [128, 128]
-  value_head_hidden_sizes: [128, 128]
-  hidden_activation: Tanh
+  # ----- Flat model -----
+  # policy_head_hidden_sizes: [128, 128]
+  # value_head_hidden_sizes: [128, 128]
+  # hidden_activation: Tanh
+
+  # ----- GNN model -----
+  lane_mlp_hiddens: [32] # Per-lane MLP hidden layers for producing lane embeddings
+  lane_activation: ReLU
+  lane_attn_neurons: 64 # Hidden layer size for attention mechanism
+  node_dim: 128
+  gnn_layers: 2
+  gnn_activation: ReLU
+  use_self_loop: True
+  actor_hiddens: [128, 128] # Policy head hidden layers
+  critic_hiddens: [128, 128] # Value head hidden layers
