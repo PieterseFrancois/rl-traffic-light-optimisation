@@ -34,3 +34,19 @@ python .\eval_run.py `
   --bundle-dir ".tuning/single_intersection_constant_seed/pbt_bundle" `
   --config environments/single_intersection/config.yaml `
   --outdir .tuning/single_intersection_constant_seed
+
+
+Grid Search Tuner
+
+python .\tuner.py `
+  --config environments/ingolstadt/config.yaml `
+  --hyper environments/ingolstadt/hyperparams.yaml `
+  --outdir .tuner/ingolstadt_rough_sampled `
+  --num-samples 32 `
+  --max-concurrent 4 `
+  --window-size 10 `
+  --delta 0.01 `
+  --patience 5 `
+  --grace-period 15
+
+
