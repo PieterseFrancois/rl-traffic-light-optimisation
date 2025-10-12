@@ -45,9 +45,17 @@ def run_eval_only(
     eval_dir.mkdir(parents=True, exist_ok=True)
 
     # Fixed evaluation seeds
-    EVALUATION_KEYS: list[int] = [
-        948048,
-        8071529,
+    TESTING_KEYS: list[int] = [
+        9046837,
+        5096362,
+        1220450,
+        139956,
+        6929871,
+        4640705,
+        6428608,
+        1144638,
+        4390983,
+        4556673,
     ]
     # Fresh evaluations (optional if results already cached)
     if not already_evaluated:
@@ -74,7 +82,7 @@ def run_eval_only(
         register_fn = MODEL_REGISTRY[model_name]
 
 
-        for key in EVALUATION_KEYS:
+        for key in TESTING_KEYS:
             print(f"\nEVALUATION SEED: {key}\n")
             env_kwargs_new["sumo_config"].seed = key
             seed_dir = csv_dir / f"seed_{key}"
@@ -146,7 +154,7 @@ def run_eval_only(
     # Reload all per-seed pickles and stack with MultiIndex rows
     imp_frames: list[pd.DataFrame] = []
     net_frames: list[pd.DataFrame] = []
-    for key in EVALUATION_KEYS:
+    for key in TESTING_KEYS:
         with (outdir / f"improvement_summary_{key}.pkl").open("rb") as f:
             data = pickle.load(f)
 
