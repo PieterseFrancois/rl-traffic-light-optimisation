@@ -17,6 +17,12 @@ python .\debug_entry.py `
   --hyperparams-file environments/ingolstadt/hyperparams.yaml `
   --outdir .ingolstadt/constant_seed_GAT
 
+python .\batch_eval.py `
+  --config environments/ingolstadt/config.yaml `
+  --outdir .grid-search-eval `
+  --freeflow-speed-mps 13.89
+
+
 # 4) Tuner: Single (PBT)
 python .\utils\tune_pbt.py `
   --config environments/single_intersection/config.yaml `
