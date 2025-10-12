@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from collections import defaultdict
+import pandas as pd
 
 
 # -----------------------------
@@ -266,6 +267,41 @@ class NetworkResults:
         # Aggregates (computed on demand)
         self._baseline_tripinfo_agg: list[TripInfoAggRow] | None = None
         self._eval_tripinfo_agg: list[TripInfoAggRow] | None = None
+
+        # For KPI "better" direction. Keys are *unprefixed* metric names.
+        self._BASE_HIGHER_IS_BETTER: dict[str, bool] = {
+            # tripinfo KPIs
+            "throughput": True,
+            "meanTravelTime": False,
+            "meanTimeLoss": False,
+            "meanWaitingTime": False,
+            "stopRate": False,          # avg waitingCount per trip
+            "meanDepartDelay": False,
+            "TTI_mean": False,
+            "TTI_median": False,
+            # summary KPIs
+            "horizon_s": True,        
+            "n_steps": True,     
+            "meanSpeed": True,
+            "meanSpeed_running_weighted": True,
+            "meanHalting": False,
+            "maxHalting": False,
+            "totalArrived": True,
+            "totalCollisions": False,
+            "totalTeleports": False,
+        }
+
+    # ---- Helpers ----
+
+
+    # Include percentile patterns: p50_TravelTime, p90_TimeLoss, p95_WaitingTime -> lower is better
+    def _higher_is_better_for_key(self, metric_key: str) -> bool:
+        # metric_key is like "trip_meanTravelTime" / "summary_meanSpeed" / "trip_p90_TimeLoss"
+        name = metric_key.split("_", 1)[1] if "_" in metric_key else metric_key
+        if name.startswith("p") and ("TravelTime" in name or "TimeLoss" in name or "WaitingTime" in name):
+            return False
+        return self._BASE_HIGHER_IS_BETTER.get(name, True)
+
 
     # ---- Loaders ----
 
@@ -530,3 +566,49 @@ class NetworkResults:
             **{f"trip_{k}": v for k, v in trip_kpis.items()},
             **{f"summary_{k}": v for k, v in sum_kpis.items()},
         }
+    
+    def kpis_comparison_df(
+        self,
+        *,
+        freeflow_speed_mps: float | None = None,
+        percentiles: tuple[float, ...] = (50, 90, 95),
+    ) -> pd.DataFrame:
+        """
+        Return a flat DataFrame with columns:
+        baseline, eval, delta, pct_improvement, higher_is_better
+        Index = KPI keys, e.g. 'trip_meanTravelTime', 'summary_meanSpeed', ...
+        delta is signed so that positive means "improved" according to the chosen direction.
+        """
+        base = self.baseline_kpis(
+            freeflow_speed_mps=freeflow_speed_mps, percentiles=percentiles
+        )
+        eva = self.eval_kpis(
+            freeflow_speed_mps=freeflow_speed_mps, percentiles=percentiles
+        )
+
+        keys = sorted(set(base.keys()) | set(eva.keys()))
+        rows = []
+        for k in keys:
+            b = base.get(k, math.nan)
+            e = eva.get(k, math.nan)
+            hib = self._higher_is_better_for_key(k)
+
+            # Signed delta: positive = improvement
+            delta = (e - b) if hib else (b - e)
+
+            # Percentage improvement relative to baseline magnitude
+            denom = abs(b) if (isinstance(b, (int, float)) and not math.isnan(b) and b != 0.0) else 1e-8
+            pct = (delta / denom) * 100.0 if isinstance(delta, (int, float)) and not math.isnan(delta) else math.nan
+
+            rows.append({
+                "kpi": k,
+                "baseline": b,
+                "eval": e,
+                "delta": delta,
+                "pct_improvement": pct,
+                "higher_is_better": hib,
+            })
+
+        df = pd.DataFrame(rows).set_index("kpi")
+        return df
+
