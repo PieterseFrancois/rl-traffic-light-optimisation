@@ -192,7 +192,7 @@
       ]
     },
     {
-      "name": "Eval Tuner: Single",
+      "name": "Eval: Ingolstadt",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/eval_run.py",
@@ -200,9 +200,24 @@
       "justMyCode": false,
       "env": { "PYTHONPATH": "${workspaceFolder}" },
       "args": [
-        "--bundle-dir", ".tuning/single_intersection_constant_seed/pbt_bundle",
-        "--config", "environments/single_intersection/config.yaml",
-        "--outdir", ".tuning/single_intersection_constant_seed"
+        "--bundle-dir", ".grid_search/HPC1/bundle",
+        "--config", "environments/ingolstadt/config.yaml",
+        "--outdir", ".ingolstadt/metric_testing"
+      ]
+    },
+    {
+      "name": "Batch Eval: Ingolstadt",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/batch_eval.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": [
+        "--config", "environments/ingolstadt/config.yaml",
+        "--outdir", ".ingolstadt/metric_testing",
+        "--freeflow-speed-mps", "13.89",
+        "--already-evaluated"
       ]
     },
     {
