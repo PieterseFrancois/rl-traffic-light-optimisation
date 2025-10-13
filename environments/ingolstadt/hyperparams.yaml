@@ -7,11 +7,11 @@ training:
 trainer:
   num_workers: 0
   rollout_fragment_length: 400
-  train_batch_size: 12000
+  train_batch_size: 12288
   minibatch_size: 512
-  num_epochs: 2
-  learning_rate: 5e-6
-  gamma: 0.99   # Discount factor of Markov decision process
+  num_epochs: 6
+  learning_rate: 1e-5
+  gamma: 0.97   # Discount factor of Markov decision process
   batch_mode: complete_episodes  # complete_episodes | truncate_episodes
 
 model:
