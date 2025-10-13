@@ -24,7 +24,7 @@ features:
 intersections:
   defaults:
     warm_start: true
-    max_detection_range_m: 50.0
+    max_detection_range_m: 61.0
     green_phase_strings: null # Default is to infer from SUMO, but can be overridden per TLS if needed
     timing_standards: # Set to zero to disable
       min_green_s: 5.0
