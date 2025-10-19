@@ -6,6 +6,7 @@ sumo:
   seed: 42
   time_to_teleport_s: -1
   simulation_length: 4000
+  ignore_junction_blocker_s: 15 # -1 to disable
 
 # ---- SUMO Vehicle Attributes  ---- #
 vehicles:

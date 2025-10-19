@@ -17,12 +17,14 @@ class SUMOConfig:
         nogui (bool): If True, start SUMO without GUI.
         seed (int | None): Random seed for the simulation. If None, no seed is set.
         time_to_teleport (int): Time in seconds before a vehicle is teleported. Default is -1 (no teleportation).
+        ignore_junction_blocker_s (int): Time in seconds to ignore junction blockers. Default is -1 (do not ignore).
     """
 
     sumocfg_filepath: str
     nogui: bool
     seed: int | None
     time_to_teleport: int = -1
+    ignore_junction_blocker_s: int = -1
 
 
 @dataclass
@@ -67,6 +69,12 @@ def start_sumo(
         args += ["--seed", str(config.seed)]
         if verbose:
             print(f"[sumo] starting with seed {config.seed}")
+
+    if config.ignore_junction_blocker_s >= 0:
+        args += [
+            "--ignore-junction-blocker",
+            str(config.ignore_junction_blocker_s),
+        ]
 
     if network_logging is not None:
         os.makedirs(network_logging.log_directory, exist_ok=True)

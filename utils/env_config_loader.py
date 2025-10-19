@@ -94,6 +94,7 @@ def _build_sumo_config(config_dict: dict[str, Any]) -> SUMOConfig:
         nogui=not bool(config_dict.get("gui", False)),
         seed=config_dict.get("seed", 42),
         time_to_teleport=config_dict.get("time_to_teleport_s", -1),
+        ignore_junction_blocker_s=config_dict.get("ignore_junction_blocker_s", -1),
     )
 
 
