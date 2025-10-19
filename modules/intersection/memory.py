@@ -131,6 +131,8 @@ class MemoryModule:
                     "total_queue_length",
                     "max_wait_s",
                     "lane_measures",
+                    "action",
+                    "in_transition",
                 ],
             )
             writer.writeheader()
@@ -145,6 +147,8 @@ class MemoryModule:
                         "lane_measures": json.dumps(
                             [asdict(lm) for lm in e.lane_measures]
                         ),
+                        "action": json.dumps(asdict(e.action)) if e.action else "null",
+                        "in_transition": str(e.in_transition).lower(),
                     }
                 )
 
