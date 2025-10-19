@@ -168,3 +168,5 @@ cython_debug/
 *.tuning/
 *.ingolstadt/
 *.tuner/
+*.temp/
+*.ablation-test-eval-SOM/*/csv
