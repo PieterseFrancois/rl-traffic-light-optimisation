@@ -48,6 +48,7 @@ def sumo_baseline_configured_tls(
             log_directory=str(log_directory),
             run_label="baseline",
         ),
+        verbose=True,
     )
 
     # Ensure all configs have warm_start=False (ensures a pure program-following baseline)

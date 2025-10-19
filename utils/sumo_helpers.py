@@ -42,6 +42,7 @@ class NetworkStateLogging:
 def start_sumo(
     config: SUMOConfig,
     network_logging: NetworkStateLogging | None = None,
+    verbose: bool = False,
 ) -> None:
     """Start the SUMO simulation."""
 
@@ -64,7 +65,8 @@ def start_sumo(
 
     if config.seed is not None:
         args += ["--seed", str(config.seed)]
-        print(f"[sumo] starting with seed {config.seed}")
+        if verbose:
+            print(f"[sumo] starting with seed {config.seed}")
 
     if network_logging is not None:
         os.makedirs(network_logging.log_directory, exist_ok=True)
