@@ -67,6 +67,7 @@ def train_until_converged(
         training_model (dict): Training model configuration used for saving with the model.
         verbose (bool, optional): Whether to print training progress. Defaults to True.
     """
+    WARMUP_ITERS = 3
     returns = deque(maxlen=parameters.window)
     best_moving_average: float = -math.inf
     best_iteration: int = -1
@@ -101,7 +102,7 @@ def train_until_converged(
             )
 
         improvement: float = moving_average - best_moving_average
-        if improvement > parameters.min_delta:
+        if improvement > parameters.min_delta and i > WARMUP_ITERS:
             best_moving_average = moving_average
             best_iteration = i
             no_improve_windows = 0
