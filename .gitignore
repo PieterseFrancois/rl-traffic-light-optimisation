@@ -170,3 +170,4 @@ cython_debug/
 *.tuner/
 *.temp/
 *.ablation-test-eval-SOM/*/csv
+*/*/csv
