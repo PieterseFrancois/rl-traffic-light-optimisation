@@ -18,8 +18,8 @@ features:
   include_queue: true
   include_approach: true
   include_total_wait: true
-  include_max_wait: true
-  include_total_speed: true
+  include_max_wait: false
+  include_total_speed: false
 
 # ---- Intersections (agents)  ---- #
 intersections:
