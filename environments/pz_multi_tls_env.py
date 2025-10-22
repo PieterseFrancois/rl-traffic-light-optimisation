@@ -87,6 +87,9 @@ class MultiTLSParallelEnv(ParallelEnv):
         self.training_seeds: list[int] | None = training_seeds
         self._seed_index = 0
 
+        # Probe reset counter
+        self._reset_count = 0
+
     # ---- PettingZoo API spaces ---- #
     def observation_space(self, agent: str):
         return self._observation_spaces[agent]
@@ -305,6 +308,13 @@ class MultiTLSParallelEnv(ParallelEnv):
     # ---- PettingZoo API: reset/step/close ---- #
     def reset(self, seed: int | None = None, options: dict | None = None):
 
+        probe_spaces = bool(options.get("probe_spaces", False) if options else False)
+
+        if self._reset_count == 0:
+            probe_spaces = True # Always probe on first reset due to PettingZoo initialisation
+
+        self._reset_count += 1
+
         # Ensure comm_bus is clear
         self.comm_bus = CommunicationBus()
 
@@ -312,8 +322,14 @@ class MultiTLSParallelEnv(ParallelEnv):
         close_sumo()
 
         if self._log_directory is not None:
+            logging_config = SUMOConfig(
+                sumocfg_filepath=self.sumo_config.sumocfg_filepath,
+                nogui=self.sumo_config.nogui if not probe_spaces else True,
+                seed=self.sumo_config.seed,
+                time_to_teleport=self.sumo_config.time_to_teleport,
+            )
             start_sumo(
-                self.sumo_config,
+                logging_config,
                 network_logging=NetworkStateLogging(
                     log_directory=str(self._log_directory), run_label="eval"
                 ),
@@ -343,7 +359,7 @@ class MultiTLSParallelEnv(ParallelEnv):
 
             training_config = SUMOConfig(
                 sumocfg_filepath=self.sumo_config.sumocfg_filepath,
-                nogui=self.sumo_config.nogui,
+                nogui=self.sumo_config.nogui if not probe_spaces else True,
                 seed=use_seed,
                 time_to_teleport=self.sumo_config.time_to_teleport,
             )

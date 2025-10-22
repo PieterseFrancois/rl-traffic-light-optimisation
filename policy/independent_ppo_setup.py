@@ -65,7 +65,7 @@ def build_independent_ppo_config(
     # Probe spaces
     tmp_env = RLlibPZEnv({"env_kwargs": env_kwargs})
     try:
-        tmp_env.reset()
+        tmp_env.reset(options={"probe_spaces": True})
         obs_spaces = tmp_env.observation_space
         act_spaces = tmp_env.action_space
         agent_ids: list[str] = list(tmp_env.agents)
