@@ -275,13 +275,13 @@ class NetworkResults:
             "meanTravelTime": False,
             "meanTimeLoss": False,
             "meanWaitingTime": False,
-            "stopRate": False,          # avg waitingCount per trip
+            "stopRate": False,  # avg waitingCount per trip
             "meanDepartDelay": False,
             "TTI_mean": False,
             "TTI_median": False,
             # summary KPIs
-            "horizon_s": True,        
-            "n_steps": True,     
+            "horizon_s": True,
+            "n_steps": True,
             "meanSpeed": True,
             "meanSpeed_running_weighted": True,
             "meanHalting": False,
@@ -293,15 +293,15 @@ class NetworkResults:
 
     # ---- Helpers ----
 
-
     # Include percentile patterns: p50_TravelTime, p90_TimeLoss, p95_WaitingTime -> lower is better
     def _higher_is_better_for_key(self, metric_key: str) -> bool:
         # metric_key is like "trip_meanTravelTime" / "summary_meanSpeed" / "trip_p90_TimeLoss"
         name = metric_key.split("_", 1)[1] if "_" in metric_key else metric_key
-        if name.startswith("p") and ("TravelTime" in name or "TimeLoss" in name or "WaitingTime" in name):
+        if name.startswith("p") and (
+            "TravelTime" in name or "TimeLoss" in name or "WaitingTime" in name
+        ):
             return False
         return self._BASE_HIGHER_IS_BETTER.get(name, True)
-
 
     # ---- Loaders ----
 
@@ -566,7 +566,7 @@ class NetworkResults:
             **{f"trip_{k}": v for k, v in trip_kpis.items()},
             **{f"summary_{k}": v for k, v in sum_kpis.items()},
         }
-    
+
     def kpis_comparison_df(
         self,
         *,
@@ -597,18 +597,27 @@ class NetworkResults:
             delta = (e - b) if hib else (b - e)
 
             # Percentage improvement relative to baseline magnitude
-            denom = abs(b) if (isinstance(b, (int, float)) and not math.isnan(b) and b != 0.0) else 1e-8
-            pct = (delta / denom) * 100.0 if isinstance(delta, (int, float)) and not math.isnan(delta) else math.nan
+            denom = (
+                abs(b)
+                if (isinstance(b, (int, float)) and not math.isnan(b) and b != 0.0)
+                else 1e-8
+            )
+            pct = (
+                (delta / denom) * 100.0
+                if isinstance(delta, (int, float)) and not math.isnan(delta)
+                else math.nan
+            )
 
-            rows.append({
-                "kpi": k,
-                "baseline": b,
-                "eval": e,
-                "delta": delta,
-                "pct_improvement": pct,
-                "higher_is_better": hib,
-            })
+            rows.append(
+                {
+                    "kpi": k,
+                    "baseline": b,
+                    "eval": e,
+                    "delta": delta,
+                    "pct_improvement": pct,
+                    "higher_is_better": hib,
+                }
+            )
 
         df = pd.DataFrame(rows).set_index("kpi")
         return df
-

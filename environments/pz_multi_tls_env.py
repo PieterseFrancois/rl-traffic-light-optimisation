@@ -311,7 +311,9 @@ class MultiTLSParallelEnv(ParallelEnv):
         probe_spaces = bool(options.get("probe_spaces", False) if options else False)
 
         if self._reset_count == 0:
-            probe_spaces = True # Always probe on first reset due to PettingZoo initialisation
+            probe_spaces = (
+                True  # Always probe on first reset due to PettingZoo initialisation
+            )
 
         self._reset_count += 1
 

@@ -87,7 +87,7 @@ def run(
 
     best_ckpt_path: Path = training_result.best_checkpoint_path
 
-    #Save episode returns to a csv
+    # Save episode returns to a csv
     episode_returns: list[float] = training_result.episode_returns
     with open(outdir / "episode_returns.csv", "w") as f:
         f.write("episode_return\n")

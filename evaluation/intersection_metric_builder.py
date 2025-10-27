@@ -93,9 +93,9 @@ class MetricsReport:
                 "agents": aids,
                 "baseline": mb,
                 "eval": me,
-                "delta": delta,  
-                "pct_improvement": pct, 
-                "higher_is_better": hib, 
+                "delta": delta,
+                "pct_improvement": pct,
+                "higher_is_better": hib,
             }
 
         # --- flat improvement summary: rows=agents, cols=metrics, values=% improvement ---
@@ -104,11 +104,15 @@ class MetricsReport:
             aids = pack["agents"]
             pct = np.asarray(pack["pct_improvement"], dtype=float)
             for i, aid in enumerate(aids):
-                rows.setdefault(aid, {})[metric] = float(pct[i]) if np.isfinite(pct[i]) else np.nan
+                rows.setdefault(aid, {})[metric] = (
+                    float(pct[i]) if np.isfinite(pct[i]) else np.nan
+                )
 
         improvement_df = pd.DataFrame.from_dict(rows, orient="index")
         improvement_df = improvement_df.reindex(index=agent_ids)
-        improvement_df = improvement_df[[m for m in mean_metrics if m in improvement_df.columns]]
+        improvement_df = improvement_df[
+            [m for m in mean_metrics if m in improvement_df.columns]
+        ]
 
         # Average row at the bottom
         avg_row = improvement_df.mean(axis=0, skipna=True)

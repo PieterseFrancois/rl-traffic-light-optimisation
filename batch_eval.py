@@ -81,7 +81,6 @@ def run_eval_only(
             raise ValueError(f"Unknown model_name in bundle: {model_name}")
         register_fn = MODEL_REGISTRY[model_name]
 
-
         for key in TESTING_KEYS:
             print(f"\nEVALUATION SEED: {key}\n")
             env_kwargs_new["sumo_config"].seed = key
@@ -213,8 +212,8 @@ def run_eval_only(
             "AVERAGE": AVERAGE_NAME,
         },
         columns={
-            'AVERAGE': 'mean',
-        }
+            "AVERAGE": "mean",
+        },
     )
 
     imp_std_avg = imp_std_avg.rename(
@@ -225,8 +224,8 @@ def run_eval_only(
             "AVERAGE": AVERAGE_NAME,
         },
         columns={
-            'AVERAGE': 'std',
-        }
+            "AVERAGE": "std",
+        },
     )
 
     # Isolate pct_imporvement column with kpi in net_mean and net_std
@@ -245,7 +244,7 @@ def run_eval_only(
     summary.to_csv(eval_dir / "overall_summary.csv")
 
     if not already_evaluated:
-        ray.shutdown() 
+        ray.shutdown()
 
 
 def main():
