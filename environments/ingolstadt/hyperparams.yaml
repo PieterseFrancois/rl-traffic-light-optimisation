@@ -27,6 +27,6 @@ model:
   node_dim: 128
   gnn_layers: 2
   gnn_activation: ReLU
-  use_self_loop: True
+  use_self_loop: true
   actor_hiddens: [128, 128] # Policy head hidden layers
   critic_hiddens: [128, 128] # Value head hidden layers
