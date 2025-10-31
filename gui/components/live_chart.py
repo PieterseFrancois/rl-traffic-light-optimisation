@@ -9,6 +9,7 @@ import matplotlib as mpl
 
 mpl.rcParams["axes.prop_cycle"] = mpl.cycler(color=["#6C3D91", "#00889C", "#78848E"])
 
+
 class LiveKpiPlot(QWidget):
     def __init__(self, parent=None, max_points: int = 4000):
         super().__init__(parent)
