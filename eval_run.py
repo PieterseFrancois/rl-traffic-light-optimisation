@@ -1,5 +1,3 @@
-# modules/eval_only_from_bundle.py
-
 import argparse
 from pathlib import Path
 
@@ -7,9 +5,8 @@ import ray
 from ray.rllib.algorithms.ppo import PPO
 
 from environments.env_wrappers import make_rllib_env
-from policy.independent_ppo_setup import build_trainer, TrainerParameters
+from policy.independent_ppo_setup import TrainerParameters
 
-# --- model registries (so we can pick the right register_fn from the bundle meta) ---
 from models.masked_flat_model import register_flat_model, MODEL_NAME as FLAT_MODEL_NAME
 
 from models.masked_gnn_attention_model import (
@@ -25,6 +22,8 @@ from utils.plot import plot_report, PlotSelection, PlotMask
 from modules.model_manager import ModelManager
 from modules.network_state import NetworkResults  # expects XMLs in output folder
 
+from event_bus import EventBus, EventNames
+
 
 MODEL_REGISTRY = {
     FLAT_MODEL_NAME: register_flat_model,
@@ -37,18 +36,33 @@ def run_eval_only(
     new_config_file: str,
     outdir: str,
     freeflow_speed_mps: float | None = None,
+    event_bus: EventBus | None = None,
 ):
     outdir = Path(outdir)
     plots_dir = outdir / "plots"
     csv_dir = outdir / "csv"
 
     # Load a NEW env config (e.g., a longer whole-day SUMO cfg) — must match network/feature shapes.
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value, "Loading env config for evaluation..."
+        )
+        if event_bus
+        else None
+    )
     env_kwargs_new = load_env_config(yaml_path=new_config_file)
 
     # RLlib
     ray.init(ignore_reinit_error=True, include_dashboard=False)
 
     # Load bundle artifacts (meta + checkpoint path)
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value, "Loading saved bundle artifacts..."
+        )
+        if event_bus
+        else None
+    )
     mm = ModelManager()
     bundle_dir = Path(bundle_run_dir)
     saved_env_kwargs, model_name, custom_model_cfg, ckpt_path = (
@@ -74,6 +88,14 @@ def run_eval_only(
         num_epochs=1,
         lr=3e-4,
     )
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value,
+            "Restoring trained policy for evaluation...",
+        )
+        if event_bus
+        else None
+    )
     eval_trainer: PPO = mm.build_and_restore_from_artifacts(
         register_fn=register_fn,
         model_name=model_name,
@@ -85,9 +107,18 @@ def run_eval_only(
 
     # Create env creator for rollout with the new env kwargs
     env_creator = make_rllib_env(env_kwargs_new)
+    sumo_seed = env_kwargs_new["sumo_config"].seed
 
     # Baseline rollout (SUMO fixed control)
     print("\n[eval] baseline rollout…")
+    (
+        event_bus.emit(
+            EventNames.BASELINE_STARTED.value,
+            f"Starting baseline rollout with seed {sumo_seed}.",
+        )
+        if event_bus
+        else None
+    )
     baseline_series = sumo_baseline_configured_tls(
         sumo_config=env_kwargs_new["sumo_config"],
         intersection_configs=env_kwargs_new["intersection_agent_configs"],
@@ -95,18 +126,47 @@ def run_eval_only(
         simulation_duration=env_kwargs_new["episode_length"],
         ticks_per_decision=env_kwargs_new["ticks_per_decision"],
         log_directory=csv_dir,
+        event_bus=event_bus,
+    )
+    (
+        event_bus.emit(EventNames.BASELINE_ENDED.value, "Baseline rollout completed.")
+        if event_bus
+        else None
     )
 
     # Trained rollout (restored policy)
+    (
+        event_bus.emit(
+            EventNames.EVALUATION_STARTED.value,
+            f"Starting RLlib PPO rollout with seed {sumo_seed}.",
+        )
+        if event_bus
+        else None
+    )
     print("\n[eval] RLlib PPO rollout (reloaded)…")
     trained_series = evaluate_trained_scenario(
         eval_trainer,
         env_creator,
         max_steps=int(env_kwargs_new["episode_length"]),
         log_directory=csv_dir,
+        event_bus=event_bus,
+    )
+    (
+        event_bus.emit(
+            EventNames.EVALUATION_ENDED.value, "RLlib PPO rollout completed."
+        )
+        if event_bus
+        else None
     )
 
     # Plots
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value, "Generating plots from results..."
+        )
+        if event_bus
+        else None
+    )
     plot_report(
         baseline_series,
         trained_series,
@@ -119,6 +179,14 @@ def run_eval_only(
 
     # Network XML → CSV/KPIs (expects baseline_*.xml and eval_*.xml in csv_dir)
     print("\n[network] parsing summary/tripinfo XML and exporting KPIs/CSVs…")
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value,
+            "Exporting NetworkResults CSVs and KPIs...",
+        )
+        if event_bus
+        else None
+    )
     net = NetworkResults(run_dir=csv_dir)
     net.load()
     net_csv_dir = csv_dir / "network"
@@ -127,10 +195,21 @@ def run_eval_only(
 
     print(f"\n[done] results in {outdir.resolve()}")
     print(f"[done] network CSVs & KPIs in {net_csv_dir.resolve()}")
+    (
+        event_bus.emit(EventNames.SIMULATION_INFO.value, "Evaluation run completed.")
+        if event_bus
+        else None
+    )
 
     # Cleanup RLlib
     eval_trainer.stop()
     ray.shutdown()
+
+    (
+        event_bus.emit(EventNames.SIMULATION_DONE.value, "Evaluation simulation done.")
+        if event_bus
+        else None
+    )
 
 
 def main():
