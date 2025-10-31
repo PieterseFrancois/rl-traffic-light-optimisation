@@ -261,12 +261,12 @@ def run(
         else None
     )
 
-    # Cleanup RLlib
-    eval_trainer.stop()
-    ray.shutdown()
-
     (
         event_bus.emit(EventNames.SIMULATION_DONE.value, "Evaluation simulation done.")
         if event_bus
         else None
     )
+
+    # Cleanup RLlib
+    eval_trainer.stop()
+    ray.shutdown()
