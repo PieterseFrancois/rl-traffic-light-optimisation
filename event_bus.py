@@ -40,3 +40,7 @@ class EventBus:
                 callback(data)
             except Exception as e:
                 print(f"Error in event subscriber for {event_name}: {e}")
+
+
+# Shared bus instance
+event_bus = EventBus()
