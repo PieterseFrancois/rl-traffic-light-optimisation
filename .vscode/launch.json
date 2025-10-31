@@ -239,6 +239,16 @@
         "--patience", "5",
         "--grace-period", "15"
       ]
+    },
+    {
+      "name": "GUI",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "args": []
     }
   ]
 }
