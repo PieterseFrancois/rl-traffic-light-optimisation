@@ -43,7 +43,7 @@ def build_app():
     sim_view = SimControllerView(
         config_file="environments/ingolstadt/config.yaml",
         hyperparams_file="environments/ingolstadt/hyperparams.yaml",
-        poll_ms=500,
+        plot_stride=10,
     )
 
     # Home hub wired to stack navigation
