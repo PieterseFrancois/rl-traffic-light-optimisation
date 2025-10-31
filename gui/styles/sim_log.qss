@@ -1,0 +1,53 @@
+/* Log pane */
+QPlainTextEdit#simLogPane {
+    background: #F9FAFB;
+    color: #181512;
+    border: 1px solid #E3E6EA;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font: 16px;
+    selection-background-color: rgba(0, 136, 156, 0.16);  /* Secondary 16% */
+    selection-color: #181512;
+}
+
+/* Subtle inset frame */
+QPlainTextEdit#simLogPane::viewport {
+    background: transparent;
+}
+
+/* Scrollbars */
+QPlainTextEdit#simLogPane QScrollBar:vertical {
+    background: transparent;
+    width: 12px;
+    margin: 4px 0 4px 0;
+}
+QPlainTextEdit#simLogPane QScrollBar::handle:vertical {
+    background: rgb(120,132,142);
+    min-height: 24px;
+    border-radius: 6px;
+}
+QPlainTextEdit#simLogPane QScrollBar::handle:vertical:hover {
+    background: #6C3D91; /* Primary */
+}
+QPlainTextEdit#simLogPane QScrollBar::add-line:vertical,
+QPlainTextEdit#simLogPane QScrollBar::sub-line:vertical {
+    height: 0; /* no arrows */
+}
+
+QPlainTextEdit#simLogPane QScrollBar:horizontal {
+    background: transparent;
+    height: 12px;
+    margin: 0 4px 0 4px;
+}
+QPlainTextEdit#simLogPane QScrollBar::handle:horizontal {
+    background: rgb(120, 132, 142);
+    min-width: 24px;
+    border-radius: 6px;
+}
+QPlainTextEdit#simLogPane QScrollBar::handle:horizontal:hover {
+    background: #6C3D91;
+}
+QPlainTextEdit#simLogPane QScrollBar::add-line:horizontal,
+QPlainTextEdit#simLogPane QScrollBar::sub-line:horizontal {
+    width: 0;
+}

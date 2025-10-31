@@ -1,0 +1,26 @@
+/* Dialogs (generic) */
+QDialog, QMessageBox {
+  background: #FFFFFF;
+  color: #181512;
+  border: 1px solid #E6E8EB;
+  border-radius: 10px;
+  min-width: 400px;
+  min-height: 200px;
+}
+
+/* Text inside the message box */
+QMessageBox QLabel {
+  color: #181512;
+  font: 500 16px;
+}
+
+/* Buttons in message boxes */
+QMessageBox QPushButton {
+  background: #6C3D91;
+  color: #FFFFFF;
+  border: 1px solid #5A2E7A;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+QMessageBox QPushButton:hover { background: #7B4DA1; }
+QMessageBox QPushButton:default { outline: none; }

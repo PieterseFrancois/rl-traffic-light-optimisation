@@ -1,0 +1,32 @@
+/* spinboxes.qss — applies to QSpinBox and QDoubleSpinBox*/
+QSpinBox, QDoubleSpinBox {
+  background: #FFFFFF;
+  color: #181512;
+  border: 1px solid #D1D5DA;
+  border-radius: 8px;
+  padding-left: 8px;
+  min-height: 30px;
+  max-width: 100px;
+}
+QSpinBox:focus, QDoubleSpinBox:focus {
+  border: 1px solid #6C3D91;      /* primary */
+}
+QSpinBox:disabled, QDoubleSpinBox:disabled {
+  color: #9AA3AB;
+  background: #F5F6F8;
+  border-color: #E1E4E8;
+}
+
+/* buttons */
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+  width: 0;
+  height: 0;
+  border: none;
+}
+
+QSpinBox::up-arrow, QSpinBox::down-arrow,
+QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {
+  width: 0;
+  height: 0;
+}

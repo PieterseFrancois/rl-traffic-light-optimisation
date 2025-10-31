@@ -1,0 +1,54 @@
+/* Checkboxes / Radios */
+QCheckBox {
+  spacing: 8px;
+}
+QCheckBox::indicator {
+  width: 18px; height: 18px;
+  border: 1px solid #C8CDD3;
+  border-radius: 4px;
+  background: #FFFFFF;
+}
+QCheckBox::indicator:hover { border-color: #00889C; }
+QCheckBox::indicator:checked {
+  background: #6C3D91;
+  border-color: #6C3D91;
+}
+
+/* Bool parameter checkboxes */
+QCheckBox[role="boolParam"] {
+  spacing: 8px;
+}
+
+/* Base indicator box */
+QCheckBox[role="boolParam"]::indicator {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 1px solid #C8CDD3;              /* light grey */
+  background: #FFFFFF;
+  image: url(assets/icons/icons8-cross.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Hover and focus ring */
+QCheckBox[role="boolParam"]::indicator:hover {
+  border-color: #00889C;                   /* NWU turquoise */
+}
+QCheckBox[role="boolParam"]::indicator:focus {
+  outline: 2px solid rgba(0,136,156,0.25);
+}
+
+/* Checked - purple tick */
+QCheckBox[role="boolParam"]::indicator:checked {
+  border-color: #6C3D91;                   /* NWU purple */
+  background: rgba(108,61,145,0.10);
+  image: url(assets/icons/icons8-check.svg);
+}
+
+/* Disabled */
+QCheckBox[role="boolParam"]::indicator:disabled {
+  border-color: #E1E4E8;
+  background: #F5F6F8;
+  image: none;
+  opacity: 0.6;
+}

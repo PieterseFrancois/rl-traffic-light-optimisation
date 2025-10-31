@@ -1,0 +1,32 @@
+QPushButton {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DA;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+QPushButton:hover { background: #F2F2F6; }
+QPushButton:disabled { color: #9AA3AB; border-color: #E1E4E8; }
+
+/* Primary action */
+QPushButton[variant="primary"] {
+  background: #6C3D91;
+  color: #FFFFFF;
+  border: 1px solid #5A2E7A;
+}
+QPushButton[variant="primary"]:hover { background: #7B4DA1; }
+QPushButton[variant="primary"]:disabled { background: #78848E; border-color: #E1E4E8; }
+
+/* Secondary action */
+QPushButton[variant="secondary"] {
+  background: #00889C;
+  color: #FFFFFF;
+  border: 1px solid #006F7E;
+}
+QPushButton[variant="secondary"]:hover { background: #0B96AA; }
+
+QPushButton[variant="ghost"] {
+  background: transparent;
+  color: #181512;
+  border: 1px solid #D1D5DA;
+}
+QPushButton[variant="ghost"]:hover { background: #F7F7FA; }

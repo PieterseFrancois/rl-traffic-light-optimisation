@@ -86,6 +86,7 @@ STYLESHEETS = [
     "gui/styles/scenario_params.qss",
     "gui/styles/message_box.qss",
     "gui/styles/combobox.qss",
+    "gui/styles/sim_log.qss",
 ]
 
 if __name__ == "__main__":
