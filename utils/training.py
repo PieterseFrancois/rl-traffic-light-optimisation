@@ -6,6 +6,10 @@ from modules.model_manager import ModelManager
 
 from dataclasses import dataclass
 
+from datetime import datetime, timezone
+
+from event_bus import EventBus, EventNames
+
 
 @dataclass
 class TrainingHyperparameters:
@@ -53,6 +57,7 @@ def train_until_converged(
     env_kwargs: dict,
     training_model: dict,
     verbose: bool = True,
+    event_bus: EventBus | None = None,
 ) -> TrainingResult:
     """
     Train the given RLlib trainer until convergence based on moving average of episode_return_mean.
@@ -72,17 +77,24 @@ def train_until_converged(
     best_moving_average: float = -math.inf
     best_iteration: int = -1
     no_improve_windows: int = 0
-    stopped_reason: str = (
-        f"[training-stop] reason=max_iterations({parameters.max_iterations})"
-    )
+    stopped_reason: str = f"max_iterations({parameters.max_iterations})"
     best_ckpt_path = None
 
     if ckpt_dir is not None:
         ckpt_dir = Path(ckpt_dir)
         ckpt_dir.mkdir(parents=True, exist_ok=True)
 
+    (
+        event_bus.emit(
+            EventNames.SIMULATION_INFO.value, "Starting training until convergence..."
+        )
+        if event_bus
+        else None
+    )
+
     episode_returns = []
 
+    previous_time: datetime = datetime.now(timezone.utc)
     for i in range(1, parameters.max_iterations + 1):
         result = trainer.train()
         episode_return = float(
@@ -97,8 +109,16 @@ def train_until_converged(
         moving_average: float = sum(returns) / max(1, len(returns))
 
         if verbose:
-            print(
-                f"iter {i:03d} | ep_return_mean={episode_return:.3f} | ma[{len(returns)}]={moving_average:.3f}\n"
+            current_time: datetime = datetime.now(timezone.utc)
+            iter_str: str = (
+                f"iter {i:03d} | time {current_time} | elapsed {(current_time - previous_time).total_seconds()/60:.2f} min"
+            )
+            iter_str += f"\n ep_return_mean={episode_return:.3f} | ma[{len(returns)}]={moving_average:.3f}\n"
+            print(iter_str)
+            (
+                event_bus.emit(EventNames.SIMULATION_INFO.value, iter_str)
+                if event_bus
+                else None
             )
 
         improvement: float = moving_average - best_moving_average
@@ -123,8 +143,16 @@ def train_until_converged(
                     break
 
     if verbose:
-        print(
-            f"[early-stop] reason={stopped_reason} | best_iter={best_iteration} | best_ma={best_moving_average:.3f}\n"
+        verbose_str: str = (
+            f"Training stopped after {i} iterations. Best moving average: {best_moving_average:.3f} at iteration {best_iteration}."
+        )
+        verbose_str += f"Reason: {stopped_reason}\n"
+
+        print(verbose_str)
+        (
+            event_bus.emit(EventNames.SIMULATION_INFO.value, verbose_str)
+            if event_bus
+            else None
         )
 
     return TrainingResult(
