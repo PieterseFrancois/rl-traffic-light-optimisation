@@ -5,6 +5,9 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QComboB
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+import matplotlib as mpl
+
+mpl.rcParams["axes.prop_cycle"] = mpl.cycler(color=["#6C3D91", "#00889C", "#78848E"])
 
 class LiveKpiPlot(QWidget):
     def __init__(self, parent=None, max_points: int = 4000):
