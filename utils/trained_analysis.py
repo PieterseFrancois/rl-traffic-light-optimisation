@@ -1,8 +1,13 @@
+import traci
+
 from ray.rllib.algorithms.ppo import PPO
 
 from modules.intersection.memory import LogEntry
 
 from pathlib import Path
+
+from event_bus import EventBus
+from utils.kpi import collect_and_emit_kpis, RunMode
 
 
 def evaluate_trained_scenario(
@@ -11,6 +16,7 @@ def evaluate_trained_scenario(
     *,
     max_steps: int,
     log_directory: str | Path,
+    event_bus: EventBus | None = None
 ) -> dict[str, list[LogEntry]]:
     """
     Use RLlib trainer to act. One independent policy per agent (policy id == agent id).
@@ -31,6 +37,10 @@ def evaluate_trained_scenario(
             actions[tls_id] = int(act)
 
         obs, _rewards, _term, _trunc, _infos = env.step(actions)
+
+        # If event bus is used, collect and emit kpis
+        if event_bus:
+            collect_and_emit_kpis(event_bus, traci, run_mode=RunMode.EVALUATION)
 
         steps += 1
 

@@ -11,6 +11,9 @@ from modules.intersection.preprocessor import PreprocessorConfig as FeatureConfi
 
 from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig, NetworkStateLogging
 
+from event_bus import EventBus
+from utils.kpi import collect_and_emit_kpis, RunMode
+
 
 def sumo_baseline_configured_tls(
     sumo_config: SUMOConfig,
@@ -19,6 +22,7 @@ def sumo_baseline_configured_tls(
     simulation_duration: float,
     log_directory: Path | str,
     ticks_per_decision: int = 1,
+    event_bus: EventBus | None = None,
 ) -> dict[str, list[LogEntry]]:
     """
     Runs a SUMO simulation with configured traffic light systems (TLS) to
@@ -36,6 +40,7 @@ def sumo_baseline_configured_tls(
         simulation_duration (float): Duration of the simulation in seconds.
         log_directory (Path | str): Directory to save the log CSV files.
         ticks_per_decision (int, optional): Number of simulation ticks between each decision step. Defaults to 1.
+        event_bus (EventBus | None, optional): Event bus for emitting events. Defaults to None.
 
     Returns:
         dict[tls_id -> list[LogEntry]]
@@ -92,6 +97,10 @@ def sumo_baseline_configured_tls(
             if log_entry is None:
                 print("Warning: No log entry found for TLS", tls_id)
                 continue  # should not happen
+
+        # If event bus is used, collect and emit kpis
+        if event_bus:
+            collect_and_emit_kpis(event_bus, traci, run_mode=RunMode.BASELINE)
 
     agent_logs: dict[str, list[LogEntry]] = {
         tls_id: agent.memory_module.get_all_logs() for tls_id, agent in agents.items()
