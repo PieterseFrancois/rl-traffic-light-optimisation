@@ -12,8 +12,8 @@ class MainWindow(QMainWindow):
     def __init__(
         self,
         scenario_view: QWidget,
-        results_view: QWidget,
         sim_view: QWidget,
+        results_view: QWidget,
         home_view: QWidget,
     ):
         super().__init__()
@@ -22,8 +22,8 @@ class MainWindow(QMainWindow):
         self._pages = {
             "Home": home_view,
             "Scenario Manager": scenario_view,
-            "Results": results_view,
             "Simulation": sim_view,
+            "Results Repository": results_view,
         }
         for w in self._pages.values():
             self._stack.addWidget(w)
