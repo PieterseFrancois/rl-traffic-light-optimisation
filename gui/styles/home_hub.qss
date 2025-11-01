@@ -1,0 +1,52 @@
+#HomeHubView {
+  color: #181512;
+  background: transparent;
+}
+
+/* Title & subtitle */
+#HomeHubView #homeTitle {
+  margin-top: 8px;
+}
+#HomeHubView #homeSubtitle {
+  color: #78848E;
+  padding: 0 8px;
+}
+
+/* Cards */
+#HomeHubView QFrame[role="homeCard"] {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 16px;
+  min-width: 680px; 
+  max-width: 920px;
+  margin: 0 12px 12px 12px;
+}
+#HomeHubView QFrame[role="homeCard"]:hover {
+  border-color: #00889C;
+  border-width: 1.5px;
+}
+
+/* Card headings & blurb */
+#HomeHubView QLabel[role="cardTitle"] {
+  font-size: 18px;
+  color: #6C3D91;
+}
+#HomeHubView QLabel[role="cardDesc"] {
+  color: #333;
+}
+#HomeHubView QPushButton[role="cardBtn"] {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #6C3D91;
+  background: #6C3D91;
+  color: #fff;
+  font-weight: 600;
+}
+#HomeHubView QPushButton[role="cardBtn"]:hover {
+  background: #7B4DA1;
+  border-color: #7B4DA1;
+}
+#HomeHubView QPushButton[role="cardBtn"]:focus {
+  outline: none;
+}
