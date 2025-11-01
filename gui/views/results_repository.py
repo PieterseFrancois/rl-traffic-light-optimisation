@@ -200,6 +200,7 @@ class ResultsView(QWidget):
         # Compare toggle
         compare_row = QHBoxLayout()
         self._csv_compare_toggle = QCheckBox("Compare")
+        self._csv_compare_toggle.setProperty("role", "boolParam")
         self._csv_compare_toggle.toggled.connect(self._toggle_csv_compare)
         compare_row.addWidget(self._csv_compare_toggle)
         compare_row.addStretch(1)
