@@ -14,6 +14,9 @@ from PySide6.QtWidgets import (
     QComboBox,
     QCheckBox,
     QPlainTextEdit,
+    QSizePolicy,
+    QGridLayout,
+    QGroupBox,
 )
 
 from event_bus import event_bus, EventNames
@@ -56,71 +59,109 @@ class SimControllerView(QWidget):
         # UI
         root = QVBoxLayout(self)
 
-        # Output dir
-        out_row = QHBoxLayout()
-        self._dir_edit = QLineEdit()
-        self._dir_edit.setPlaceholderText("Output folder for run artefacts")
-        out_browse = QPushButton("Browse")
-        out_browse.setObjectName("sumoBrowseBtn")
-        out_browse.clicked.connect(self._browse_dir)
-        out_row.addWidget(self._dir_edit, 1)
-        out_row.addWidget(out_browse)
-        root.addLayout(out_row)
+        # Controller
+        ctrl_box = QGroupBox("Controller")
+        ctrl_box.setObjectName("simCtrlGroup")
+        ctrl = QGridLayout(ctrl_box)
 
-        # Run mode
-        mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Run mode:"))
+        ctrl.setColumnStretch(0, 0)
+        ctrl.setColumnStretch(1, 1)
+        ctrl.setColumnStretch(2, 1)
+        ctrl.setColumnStretch(3, 0)
+        root.addWidget(ctrl_box)
+
+        # Run mode next to label, "Already evaluated" at far right
+        lbl_mode = QLabel("Run mode:")
         self._mode = QComboBox()
         self._mode.setObjectName("simRunModeCombo")
         self._mode.addItem(RunMode.TRAIN_EVAL.value, RunMode.TRAIN_EVAL)
         self._mode.addItem(RunMode.EVAL_ONLY.value, RunMode.EVAL_ONLY)
         self._mode.addItem(RunMode.BATCH_EVAL_ONLY.value, RunMode.BATCH_EVAL_ONLY)
-        mode_row.addWidget(self._mode, 1)
-        root.addLayout(mode_row)
+        self._already_chk = QCheckBox("Already evaluated")
+        self._already_chk.setProperty("role", "boolParam")
 
-        # bundle_run_dir row (eval modes)
+        ctrl.addWidget(lbl_mode, 0, 0)
+        ctrl.addWidget(self._mode, 0, 1, 1, 2)  # span 2 cols
+        ctrl.addWidget(self._already_chk, 0, 3, alignment=Qt.AlignRight)
+
+        # Output folder (field + Browse)
+        out_row = QHBoxLayout()
+        self._dir_edit = QLineEdit()
+        self._dir_edit.setPlaceholderText("Choose output folder for run artefacts")
+        out_browse = QPushButton("Browse")
+        out_browse.setObjectName("sumoBrowseBtn")
+        out_browse.clicked.connect(self._browse_dir)
+        out_row.addWidget(self._dir_edit, 1)
+        out_row.addWidget(out_browse)
+        out_w = QWidget()
+        out_w.setLayout(out_row)
+        ctrl.addWidget(out_w, 1, 0, 1, 4)
+
+        # bundle_run_dir (eval modes only)
         bundle_row = QHBoxLayout()
         self._bundle_edit = QLineEdit()
-        self._bundle_edit.setPlaceholderText("bundle_run_dir (for eval modes)")
-        bundle_btn = QPushButton("Browse bundle dir")
+        self._bundle_edit.setPlaceholderText("Choose bundle (saved model) directory")
+        bundle_btn = QPushButton("Browse")
         bundle_btn.clicked.connect(self._browse_bundle)
         bundle_row.addWidget(self._bundle_edit, 1)
         bundle_row.addWidget(bundle_btn)
         self._bundle_row_w = QWidget()
         self._bundle_row_w.setLayout(bundle_row)
-        root.addWidget(self._bundle_row_w)
-
-        self._already_chk = QCheckBox("Already evaluated")
-        root.addWidget(self._already_chk)
+        ctrl.addWidget(self._bundle_row_w, 2, 0, 1, 4)
 
         # Controls
-        btns = QHBoxLayout()
+        btn_row = QHBoxLayout()
         self._start = QPushButton("Start")
         self._start.setObjectName("simStartBtn")
         self._start.setProperty("variant", "primary")
+        self._start.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self._start.setFixedWidth(168)
+
         self._stop = QPushButton("Force Stop")
         self._stop.setObjectName("simStopBtn")
         self._stop.setEnabled(False)
-        btns.addWidget(self._start)
-        btns.addWidget(self._stop)
-        root.addLayout(btns)
+        self._stop.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self._stop.setFixedWidth(148)
+
+        btn_row.addStretch(1)
+        btn_row.addWidget(self._start)
+        btn_row.addSpacing(12)
+        btn_row.addWidget(self._stop)
+        btn_row.addStretch(1)
+        btn_w = QWidget()
+        btn_w.setLayout(btn_row)
+        ctrl.addWidget(btn_w, 3, 0, 1, 4)
+
+        #  Live metrics
+        metrics_box = QGroupBox("Live metrics")
+        metrics_box.setObjectName("simMetricsGroup")
+        mcol = QVBoxLayout(metrics_box)
+        root.addWidget(metrics_box)
 
         # Status + highlighted summary row
+        status_layout = QHBoxLayout()
+        status_layout.addWidget(QLabel("Status:"))
         self._status = QLabel("Idle")
         self._status.setObjectName("simStatus")
+        status_layout.addWidget(self._status)
+        status_layout.addStretch(1)
+        mcol.addLayout(status_layout)
 
+        summary_layout = QHBoxLayout()
+        summary_layout.addWidget(QLabel("Summary:"))
         self._summary = QLabel(
             "t: -, veh: -, avg_wait: -, time_loss: -, acc_wait: -, "
             "speed: -, arrived: -, departed: -"
         )
         self._summary.setObjectName("simSummaryRow")
         self._summary.setProperty("variant", "highlight")
+        summary_layout.addWidget(self._summary)
+        summary_layout.addStretch(1)
+        mcol.addLayout(summary_layout)
 
-        root.addWidget(self._status)
-        root.addWidget(self._summary)
-
-        # Split view: left = terminal, right = live chart
+        # Split view inside Live metrics: left = terminal log, right = live chart
         split = QHBoxLayout()
+        mcol.addLayout(split)
 
         # Left: terminal log
         left = QVBoxLayout()
@@ -135,8 +176,6 @@ class SimControllerView(QWidget):
         self._chart = LiveKpiPlot(max_points=4000)
         right.addWidget(self._chart)
         split.addLayout(right, 2)
-
-        root.addLayout(split)
 
         # Wire buttons/mode
         self._start.clicked.connect(self._on_start_clicked)
