@@ -16,6 +16,7 @@ class SUMOConfig:
         sumocfg_filepath (str): Path to the SUMO configuration file.
         nogui (bool): If True, start SUMO without GUI.
         seed (int | None): Random seed for the simulation. If None, no seed is set.
+        scale (float): Scale factor for the simulation. Default is 1.0.
         time_to_teleport (int): Time in seconds before a vehicle is teleported. Default is -1 (no teleportation).
         ignore_junction_blocker_s (int): Time in seconds to ignore junction blockers. Default is -1 (do not ignore).
     """
@@ -23,6 +24,7 @@ class SUMOConfig:
     sumocfg_filepath: str
     nogui: bool
     seed: int | None
+    scale: float = 1.0
     time_to_teleport: int = -1
     ignore_junction_blocker_s: int = -1
 
@@ -63,6 +65,8 @@ def start_sumo(
         "--no-warnings",
         "--time-to-teleport",
         str(config.time_to_teleport),
+        "--scale",
+        str(config.scale),
     ]
 
     if config.seed is not None:

@@ -93,6 +93,7 @@ def _build_sumo_config(config_dict: dict[str, Any]) -> SUMOConfig:
         sumocfg_filepath=config_dict.get("sumocfg"),
         nogui=not bool(config_dict.get("gui", False)),
         seed=config_dict.get("seed", 42),
+        scale=float(config_dict.get("scale", 1.0)),
         time_to_teleport=config_dict.get("time_to_teleport_s", -1),
         ignore_junction_blocker_s=config_dict.get("ignore_junction_blocker_s", -1),
     )

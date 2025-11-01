@@ -30,6 +30,7 @@ def build_app():
         editable_params=[
             {"path": "sumo.gui", "component": "bool"},
             {"path": "sumo.seed", "component": "pos_int"},
+            {"path": "sumo.scale", "component": "pos_float"},
             {"path": "sumo.time_to_teleport_s", "component": "int"},
             {"path": "sumo.simulation_length", "component": "pos_int"},
             {"path": "sumo.ignore_junction_blocker_s", "component": "int"},
