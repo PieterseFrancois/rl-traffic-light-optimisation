@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QApplication
 
 from gui.app_shell import MainWindow
 from gui.views.scenario_manager import ScenarioManagerView
-from gui.views.results_repository import ResultsRepositoryView
+from gui.views.results_repository import ResultsView
 from gui.views.sim_controller import SimControllerView
 from gui.views.home_hub import HomeHubView
 
@@ -39,7 +39,7 @@ def build_app():
             {"path": "training.moving_window_size", "component": "pos_int"},
         ],
     )
-    results_view = ResultsRepositoryView(runs_root="runs")
+    results_view = ResultsView(default_video_dir=".video-repository")
     sim_view = SimControllerView(
         config_file="environments/ingolstadt/config.yaml",
         hyperparams_file="environments/ingolstadt/hyperparams.yaml",
@@ -51,13 +51,13 @@ def build_app():
     dummy = HomeHubView(
         lambda: None, lambda: None, lambda: None
     )  # replaced after window exists
-    win = MainWindow(scenario_view, results_view, sim_view, dummy)
+    win = MainWindow(scenario_view, sim_view, results_view, dummy)
 
     # Replace callbacks to target actual indices
     def go(idx):
         return lambda: win._nav.setCurrentRow(idx)
 
-    home = HomeHubView(go(1), go(2), go(3))
+    home = HomeHubView(go(1), go(3), go(2))
     win._stack.removeWidget(dummy)
     win._stack.insertWidget(0, home)
     win._nav.setCurrentRow(0)
@@ -87,6 +87,8 @@ STYLESHEETS = [
     "gui/styles/message_box.qss",
     "gui/styles/combobox.qss",
     "gui/styles/sim_log.qss",
+    "gui/styles/slider.qss",
+    "gui/styles/csv.qss",
 ]
 
 if __name__ == "__main__":
