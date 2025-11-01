@@ -1,0 +1,12 @@
+/* =========================
+   NWU Light Theme (QSS)
+   Primary:   #6C3D91  rgb(108,61,145)
+   Secondary: #00889C  rgb(0,136,156)
+   Tertiary:  #78848E  rgb(120,132,142)
+   Text:      #181512  rgb(24,21,18)
+   Surfaces:  #FFFFFF base, #F7F7FA alt
+   ========================= */
+
+/* ---- Base ---- */
+* { color: #181512; font-size: 18px; }
+QMainWindow#MainWindow, #rootContainer { background: #FFFFFF; }

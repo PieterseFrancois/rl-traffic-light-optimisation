@@ -1,0 +1,10 @@
+QLineEdit {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DA;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+QLineEdit:focus {
+  border: 1px solid #6C3D91;
+  outline: none;
+}

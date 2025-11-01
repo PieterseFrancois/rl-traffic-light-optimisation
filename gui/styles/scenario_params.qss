@@ -1,20 +1,3 @@
-/* Group container box */
-QGroupBox#scenarioSection {
-  border-radius: 10px;
-  margin-top: 10px;     /* space for title */
-  padding: 10px;
-  background: #FFFFFF;
-  position: center;
-}
-
-/* Group title text */
-QGroupBox#scenarioSection::title {
-  subcontrol-origin: margin;
-  subcontrol-position: top left;
-  padding: 0 6px;
-  color: #181512;
-}
-
 /* Field labels (independent of title styling) */
 QLabel#paramLabel {
   color: #4A4F55;

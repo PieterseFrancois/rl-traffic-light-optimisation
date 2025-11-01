@@ -89,6 +89,10 @@ STYLESHEETS = [
     "gui/styles/sim_log.qss",
     "gui/styles/slider.qss",
     "gui/styles/csv.qss",
+    "gui/styles/home_hub.qss",
+    "gui/styles/sidenav.qss",
+    "gui/styles/line_edits.qss",
+    "gui/styles/groupbox.qss",
 ]
 
 if __name__ == "__main__":
