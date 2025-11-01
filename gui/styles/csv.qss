@@ -1,0 +1,101 @@
+/* Scope: Metrics block only (uses your objectNames) */
+QGroupBox#metricsPanel {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 10px;
+  margin-top: 12px;
+  padding: 12px;
+}
+QGroupBox#metricsPanel::title {
+  subcontrol-origin: margin;
+  left: 10px;
+  padding: 0 6px;
+  background: transparent;
+}
+
+/* Splitter handle between tables */
+#metricsSplitter::handle {
+  background: rgba(0,0,0,0.08);
+}
+#metricsSplitter::handle:hover {
+  background: rgba(0,0,0,0.18);
+}
+#metricsSplitter::handle:horizontal { width: 6px; }
+
+/* Tables */
+QTableView#metricsTableLeft, QTableView#metricsTableRight {
+  background: #ffffff;                 /* fix dark body */
+  color: #111;
+  gridline-color: rgba(0,0,0,0.12);
+  selection-background-color: #e6f1fb; /* readable blue */
+  selection-color: #000;
+  alternate-background-color: #fafafa; /* zebra */
+  outline: none;
+}
+
+/* Row height and header look */
+QTableView#metricsTableLeft::item,
+QTableView#metricsTableRight::item {
+  padding: 6px 8px;                    /* taller rows, better hit area */
+}
+QHeaderView::section {
+  background: #f2f2f2;
+  color: #222;
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 6px 8px;
+  font-weight: 600;
+}
+QHeaderView::section:horizontal {
+  /* space for sort arrow and long headers */
+  min-height: 28px;
+}
+QHeaderView::down-arrow,
+QHeaderView::up-arrow {
+  /* ensure sort arrows stay visible on light header */
+  width: 10px; height: 10px;
+}
+
+QComboBox#csvComboLeft, QComboBox#csvComboRight,
+QLineEdit#csvFilterLeft, QLineEdit#csvFilterRight {
+  padding: 6px 8px;
+  border: 1px solid rgba(0,0,0,0.22);
+  border-radius: 8px;
+  background: #fff;
+}
+QComboBox#csvComboLeft:focus, QComboBox#csvComboRight:focus,
+QLineEdit#csvFilterLeft:focus, QLineEdit#csvFilterRight:focus {
+  border: 1px solid #5b9bd5;
+}
+
+/* Horizontal scrollbars inside the tables */
+QTableView#metricsTableLeft QScrollBar:horizontal,
+QTableView#metricsTableRight QScrollBar:horizontal {
+  height: 10px;
+}
+QTableView#metricsTableLeft QScrollBar::handle:horizontal,
+QTableView#metricsTableRight QScrollBar::handle:horizontal {
+  background: rgba(0,0,0,0.25);
+  border-radius: 5px;
+  margin: 0 20px;
+}
+QTableView#metricsTableLeft QScrollBar::add-line:horizontal,
+QTableView#metricsTableRight QScrollBar::add-line:horizontal,
+QTableView#metricsTableLeft QScrollBar::sub-line:horizontal,
+QTableView#metricsTableRight QScrollBar::sub-line:horizontal {
+  width: 0; background: transparent; /* hide arrow buttons */
+}
+
+QTableView#metricsTableLeft,
+QTableView#metricsTableRight {
+  font-size: 12px;   /* inner cell text */
+}
+
+QTableView#metricsTableLeft QHeaderView::section:horizontal,
+QTableView#metricsTableRight QHeaderView::section:horizontal {
+  font-size: 12px;   /* column headers */
+}
+
+QTableView#metricsTableLeft QHeaderView::section:vertical,
+QTableView#metricsTableRight QHeaderView::section:vertical {
+  font-size: 12px;     /* row numbers */
+  padding: 2px 4px;    /* keeps row index column compact */
+}
