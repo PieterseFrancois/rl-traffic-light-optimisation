@@ -10,6 +10,18 @@
         <route-files value="ingolstadt21.rou.xml"/>
         <additional-files value="ingolstadt21.add.xml"/>
     </input>
+    <processing>
+		<threads value="1"/>
+        <max-depart-delay value="300"/>
+		<default.carfollowmodel value="Krauss"/>
+	</processing>
+	<routing>
+		<routing-algorithm value="dijkstra"/>
+		<device.rerouting.probability value="0.82"/>
+		<device.rerouting.period value="300" />
+		<device.rerouting.threads value="1"/>
+		<device.rerouting.synchronize value="true"/>
+	</routing>
 
     <time>
         <begin value="57600"/>
