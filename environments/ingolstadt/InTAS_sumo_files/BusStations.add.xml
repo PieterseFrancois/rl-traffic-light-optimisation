@@ -165,7 +165,7 @@
     <busStop id="217" lane="266567306_1" startPos="20.37" endPos="35.37" name="Heydeckstraße" friendlyPos="1"/>
     <busStop id="218" lane="54169280#4_1" startPos="10.57" endPos="25.57" name="Hindemithstraße" friendlyPos="1"/>
     <busStop id="219" lane="42745545#3_1" startPos="39.28" endPos="54.28" name="Lannerstraße" friendlyPos="1"/>
-    <busStop id="22" lane="-315358250#0_1" startPos="0.79" endPos="10.79" name="Audi - Forum"/>
+    <busStop id="22" lane="-315358250#0_1" startPos="0.79" endPos="2.79" name="Audi - Forum"/>
     <busStop id="220" lane="266567304#0_1" startPos="35.25" endPos="50.25" name="Nürnberger Straße" friendlyPos="1"/>
     <busStop id="221" lane="201963533#1_1" startPos="11.96" endPos="26.96" name="Permoserstraße" friendlyPos="1"/>
     <busStop id="222" lane="305495773#0_1" startPos="113.19" endPos="128.19" name="Pestalozzistraße" friendlyPos="1"/>

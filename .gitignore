@@ -171,4 +171,6 @@ cython_debug/
 *.temp/
 *.ablation-test-eval-SOM/*/csv
 */*/csv
+*/*/*/csv
 .extensive_run/SOM4/
+.SOM7-double-demand/
