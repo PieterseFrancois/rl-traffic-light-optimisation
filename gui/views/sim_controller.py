@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QGroupBox,
 )
 
+from pathlib import Path
+
 from event_bus import event_bus, EventNames
 from gui.components.live_chart import LiveKpiPlot
 from gui.runners.sim_runner import RunMode, SimulationRunner
@@ -261,6 +263,8 @@ class SimControllerView(QWidget):
                     self, "Folder error", f"Cannot create output folder:\n{e}"
                 )
                 return
+        
+        self._outdir = out_dir
 
         # Guard against concurrent runs
         if self._is_running or (
@@ -444,6 +448,7 @@ class SimControllerView(QWidget):
         self._tearing_down = False
 
     def _on_sim_done(self, msg: str | None):
+        self._chart.save_all_metrics_csv(Path(self._outdir) / "tracked_metrics")
         self.sig_log_line.emit(f"[done] {msg or 'Simulation finished.'}")
         self._teardown_run(clean=True)
 
