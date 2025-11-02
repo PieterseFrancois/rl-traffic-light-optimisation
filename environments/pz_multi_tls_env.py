@@ -22,6 +22,10 @@ from dataclasses import asdict
 from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig, NetworkStateLogging
 
 
+from disruptions.fault_manager import FaultManager
+from disruptions.all_red_fault import AllRedFault
+
+
 class MultiTLSParallelEnv(ParallelEnv):
 
     def __init__(
@@ -89,6 +93,15 @@ class MultiTLSParallelEnv(ParallelEnv):
 
         # Probe reset counter
         self._reset_count = 0
+
+        # Fault manager
+        ALL_RED_FAULT: bool = True
+        faults = []
+        if ALL_RED_FAULT:
+            faults.append(AllRedFault("tlN7", duration_steps=120, start_step=58200))
+            faults.append(AllRedFault("tlN15", duration_steps=120, start_step=58200))
+
+        self.fault_manager = FaultManager(faults)
 
     # ---- PettingZoo API spaces ---- #
     def observation_space(self, agent: str):
@@ -409,6 +422,8 @@ class MultiTLSParallelEnv(ParallelEnv):
             if agent.ready():
                 projected_action = self._project_action(agent, action)
                 agent.apply_action(projected_action)
+
+        self.fault_manager.step(int(traci.simulation.getTime()))
 
         # Advance the simulation to next decision boundary
         for _ in range(self.ticks_per_decision):
