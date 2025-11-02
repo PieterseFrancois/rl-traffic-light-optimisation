@@ -95,7 +95,7 @@ class MultiTLSParallelEnv(ParallelEnv):
         self._reset_count = 0
 
         # Fault manager
-        ALL_RED_FAULT: bool = True
+        ALL_RED_FAULT: bool = False
         faults = []
         if ALL_RED_FAULT:
             faults.append(AllRedFault("tlN7", duration_steps=120, start_step=58200))
