@@ -19,7 +19,7 @@ def build_app():
             {
                 "name": "InTAS (Full Scenario)",
                 "image_path": "assets/media/InTAS.png",
-                "sumocfg": "environments/ingolstadt/InTAS_sumo_files/InTAS_buildings.cfg",
+                "sumocfg": "environments/ingolstadt/InTAS_sumo_files/InTAS_buildings.sumocfg",
             },
             {
                 "name": "RESCO (Reduced Scenario)",
