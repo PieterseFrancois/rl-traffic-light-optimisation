@@ -1,4 +1,5 @@
 from collections import deque
+from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QComboBox
@@ -6,6 +7,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 import matplotlib as mpl
+
+import pandas as pd
 
 mpl.rcParams["axes.prop_cycle"] = mpl.cycler(color=["#6C3D91", "#00889C", "#78848E"])
 
@@ -88,7 +91,6 @@ class LiveKpiPlot(QWidget):
         self._schedule_redraw()
 
     # Private methods
-
     def _on_metric_changed(self, _idx: int):
         self._cur_key = self.metric_combo.currentData()
         self._schedule_redraw()
@@ -118,3 +120,30 @@ class LiveKpiPlot(QWidget):
 
         self.canvas.flush_events()
         self.canvas.repaint()
+
+    def _df_phase(self, metric_key: str, phase: str) -> pd.DataFrame:
+        tbuf = self._buffer[phase][metric_key]["t"]
+        ybuf = self._buffer[phase][metric_key]["y"]
+        name = "baseline" if phase == "baseline" else "eval"
+        return pd.DataFrame({"t": list(tbuf), name: list(ybuf)})
+
+    def _merged_metric_df(self, metric_key: str) -> pd.DataFrame:
+        df_b = self._df_phase(metric_key, "baseline")
+        df_e = self._df_phase(metric_key, "eval")
+        df = pd.merge(df_b, df_e, on="t", how="outer").sort_values("t", kind="mergesort")
+        return df[["t", "baseline", "eval"]]
+    
+    def save_all_metrics_csv(self, directory: str | Path) -> list[Path]:
+        """
+        Save one CSV per metric into 'directory', each with columns:
+        t, baseline, eval
+        Filenames: <metric>.csv (e.g. avg_wait.csv)
+        """
+        directory = Path(directory)
+        directory.mkdir(parents=True, exist_ok=True)
+        written: list[Path] = []
+        for key, _ in self._metrics:
+            p = directory / f"{key}.csv"
+            self._merged_metric_df(key).to_csv(p, index=False)
+            written.append(p)
+        return written
