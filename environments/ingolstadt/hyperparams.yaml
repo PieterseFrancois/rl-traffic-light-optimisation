@@ -15,11 +15,6 @@ trainer:
   batch_mode: complete_episodes  # complete_episodes | truncate_episodes
 
 model:
-  # ----- Flat model -----
-  # policy_head_hidden_sizes: [128, 128]
-  # value_head_hidden_sizes: [128, 128]
-  # hidden_activation: Tanh
-
   # ----- GNN model -----
   lane_mlp_hiddens: [32] # Per-lane MLP hidden layers for producing lane embeddings
   lane_activation: ReLU
@@ -30,3 +25,9 @@ model:
   use_self_loop: true
   actor_hiddens: [128, 128] # Policy head hidden layers
   critic_hiddens: [128, 128] # Value head hidden layers
+
+  # ---- Model Switches ---- 
+  # Existing models may break if these are changed
+  use_lane_attention: false
+  use_graph_attention: true
+  neighbour_agg: none # none | mean | append     # How to aggregate neighbour embeddings if not using GAT

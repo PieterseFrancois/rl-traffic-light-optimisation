@@ -30,16 +30,29 @@ def _build_mlp(sizes: list[int], Act: type[nn.Module] | None) -> nn.Sequential:
     layers: list[nn.Module] = []
     for i in range(len(sizes) - 1):
         layers.append(nn.Linear(sizes[i], sizes[i + 1]))
-        if i < len(sizes) - 2:
-            layers.append(Act()) if Act is not None else None
+        if i < len(sizes) - 2 and Act is not None:
+            layers.append(Act())
     return nn.Sequential(*layers)
 
 
-class _LaneAttentionEncoder(nn.Module):
+def _masked_mean(x: torch.Tensor, mask: torch.Tensor, dim: int) -> torch.Tensor:
     """
-    Produce a single embedding from multiple lane features via:
-      1) Per-lane MLP to produce lane embeddings
-      2) Additive attention across lanes to produce single embedding
+    Masked mean along a dimension.
+    x: [..., L, ...]
+    mask: same shape along the reduced dim; binary {0,1}
+    """
+    mask = mask.to(dtype=x.dtype)
+    num = (x * mask.unsqueeze(-1)).sum(dim=dim)
+    den = mask.sum(dim=dim).clamp_min(1.0)
+    return num / den.unsqueeze(-1)
+
+
+class _LaneEncoder(nn.Module):
+    """
+    Lane -> node encoder.
+    Modes:
+      - attention (default): per-lane MLP then additive attention over lanes
+      - mean: per-lane MLP then masked mean over lanes
     """
 
     def __init__(
@@ -48,31 +61,34 @@ class _LaneAttentionEncoder(nn.Module):
         lane_mlp_hiddens: list[int],
         out_dim: int,
         act_name: str,
+        use_lane_attention: bool = True,
         attn_hidden: int = 64,
     ):
         super().__init__()
         Act = getattr(nn, act_name, nn.Tanh)
-        self.mlp = _build_mlp(
-            [in_dim, *lane_mlp_hiddens, out_dim], Act
-        )  # Per-lane MLP to produce embeddings
-        self.W = nn.Linear(
-            out_dim, attn_hidden, bias=True
-        )  # Attention feature transform
-        self.v = nn.Linear(
-            attn_hidden, 1, bias=False
-        )  # Attention scoring vector - collapses attention features to a single score per lane
-        self.tanh = nn.Tanh()
+        self.mlp = _build_mlp([in_dim, *lane_mlp_hiddens, out_dim], Act)
+        self.use_lane_attention = bool(use_lane_attention)
+
+        if self.use_lane_attention:
+            self.W = nn.Linear(out_dim, attn_hidden, bias=True)
+            self.v = nn.Linear(attn_hidden, 1, bias=False)
+            self.tanh = nn.Tanh()
 
     def forward(self, lanes: torch.Tensor, lane_mask: torch.Tensor) -> torch.Tensor:
+        # lanes: [B, L, F]  lane_mask: [B, L]
         lane_embeddings = self.mlp(lanes)  # [B, L, D]
+
+        if not self.use_lane_attention:
+            # Simple masked mean pooling
+            return _masked_mean(lane_embeddings, lane_mask, dim=1)  # [B, D]
+
+        # Additive attention over lanes
         attn_scores = self.v(self.tanh(self.W(lane_embeddings))).squeeze(-1)  # [B, L]
         attn_scores = attn_scores.masked_fill(lane_mask <= 0, float("-inf"))
         attn_weights = torch.softmax(attn_scores, dim=1)  # [B, L]
         attn_weights = torch.where(
-            torch.isfinite(attn_weights),
-            attn_weights,
-            torch.zeros_like(attn_weights),
-        )  # all-masked safety
+            torch.isfinite(attn_weights), attn_weights, torch.zeros_like(attn_weights)
+        )
         encoded = (lane_embeddings * attn_weights.unsqueeze(-1)).sum(dim=1)  # [B, D]
         return encoded
 
@@ -156,11 +172,13 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
       nbr_mask:       [B, K_max]   (1 if neighbour present else 0)
       nbr_discount:   [B, K_max]   (present but ignored)
 
-    Pipeline:
-      1) Lane -> node via MLP + attention (shared for ego and neighbours)
-      2) Repeat GAT neighbour->ego message passing (ignores discounts)
-      3) Policy/Value heads on final ego embedding
-      4) Safe action masking
+    Config toggles (custom_model_config):
+      use_lane_attention: bool = True
+      use_graph_attention: bool = True
+      neighbour_agg: str in {"none","mean","append"}  # used when use_graph_attention=False
+        - none: ignore neighbours completely (ego only)
+        - mean: masked mean over neighbours -> CONCAT with ego
+        - append: flatten neighbours [B,K,D] -> [B, K*D] and CONCAT with ego
     """
 
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
@@ -179,45 +197,78 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
 
         c = model_config.get("custom_model_config", {}) or {}
 
+        # Lane encoder config
         lane_mlp_hiddens = list(c.get("lane_mlp_hiddens"))
         lane_act = str(c.get("lane_activation"))
         lane_attn_neurons = int(c.get("lane_attn_neurons"))
+        self.use_lane_attention = bool(c.get("use_lane_attention", True))
 
+        # Node / GNN config
         self.D = int(c.get("node_dim"))
         g_layers = int(c.get("gnn_layers"))
         g_act = str(c.get("gnn_activation"))
         use_self = bool(c.get("use_self_loop"))
 
-        actor_hiddens = list(c.get("actor_hiddens"))
-        critic_hiddens = list(c.get("critic_hiddens"))
+        # Neighbour aggregation switches
+        self.use_graph_attention = bool(c.get("use_graph_attention", True))
+        self.neighbour_agg = str(c.get("neighbour_agg", "none")).lower()
+        assert self.neighbour_agg in {
+            "none",
+            "mean",
+            "append",
+        }, "neighbour_agg must be one of {'none','mean','append'}"
 
-        # Lane -> node encoder (shared)
-        self.lane_encoder = _LaneAttentionEncoder(
+        # Build lane encoder (shared)
+        self.lane_encoder = _LaneEncoder(
             in_dim=F,
             lane_mlp_hiddens=lane_mlp_hiddens,
             out_dim=self.D,
             act_name=lane_act,
+            use_lane_attention=self.use_lane_attention,
             attn_hidden=lane_attn_neurons,
         )
 
-        # GAT layers (neighbour -> ego)
-        self.gnn = nn.ModuleList(
-            [
-                _NeighbourToEgoGATLayer(self.D, act_name=g_act, use_self_loop=use_self)
-                for _ in range(max(1, g_layers))
-            ]
-        )
+        # GAT stack (if enabled)
+        if self.use_graph_attention:
+            self.gnn = nn.ModuleList(
+                [
+                    _NeighbourToEgoGATLayer(
+                        self.D, act_name=g_act, use_self_loop=use_self
+                    )
+                    for _ in range(max(1, g_layers))
+                ]
+            )
+        else:
+            self.gnn = None  # not used
 
-        # Heads on ego only
-        self.policy_actor = _build_mlp([self.D, *actor_hiddens, self.A], None)
-        self.value_critic = _build_mlp([self.D, *critic_hiddens, 1], None)
+        # Determine the dimension that feeds the heads
+        # - GAT → D
+        # - 'none' → D
+        # - 'mean' → concat(ego[D], mean_nei[D]) = 2D
+        # - 'append' → concat(ego[D], H_nei_flat[K*D]) = (1+K)*D
+        if self.use_graph_attention:
+            self.head_in_dim = self.D
+        else:
+            if self.neighbour_agg == "none":
+                self.head_in_dim = self.D
+            elif self.neighbour_agg == "mean":
+                self.head_in_dim = 2 * self.D
+            elif self.neighbour_agg == "append":
+                self.head_in_dim = self.D + self.K * self.D
+
+        # Heads
+        actor_hiddens = list(c.get("actor_hiddens"))
+        critic_hiddens = list(c.get("critic_hiddens"))
+        self.policy_actor = _build_mlp([self.head_in_dim, *actor_hiddens, self.A], None)
+        self.value_critic = _build_mlp([self.head_in_dim, *critic_hiddens, 1], None)
 
         self._value_out: torch.Tensor | None = None
 
+    # ---- Encoders ---- #
     def _encode_ego(
         self, lane_features: torch.Tensor, lane_mask: torch.Tensor
     ) -> torch.Tensor:
-        # [B, L, F], [B, L] -> [B, D]
+        # [B, L, F], [B, L] -> [B, D] - under full model pipeline (lane attention + GAT)
         return self.lane_encoder(lane_features, lane_mask)
 
     def _encode_nei(
@@ -242,14 +293,34 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
         nbr_lane_mask = obs["nbr_lane_mask"].float()  # [B, K, L]
         nbr_mask = obs["nbr_mask"].float()  # [B, K]
 
+        # Encode ego and neighbours
         h_ego = self._encode_ego(lane_features, lane_mask)  # [B, D]
         H_nei = self._encode_nei(nbr_features, nbr_lane_mask)  # [B, K, D]
 
-        # GAT neighbour -> ego message passing
-        for layer in self.gnn:
-            h_ego = layer(h_ego, H_nei, nbr_mask)  # [B, D]
+        if self.use_graph_attention:
+            # GAT neighbour -> ego message passing
+            for layer in self.gnn:
+                h_ego = layer(h_ego, H_nei, nbr_mask)  # [B, D]
+            head_in = h_ego  # [B, D]
+        else:
+            if self.neighbour_agg == "none":
+                head_in = h_ego  # [B, D]
+            elif self.neighbour_agg == "mean":
+                # Masked mean across present neighbours, then concat with ego
+                m = nbr_mask.to(dtype=H_nei.dtype)  # [B, K]
+                # prevent div-by-zero
+                den = m.sum(dim=1, keepdim=True).clamp_min(1.0)
+                mean_nei = (H_nei * m.unsqueeze(-1)).sum(dim=1) / den  # [B, D]
+                head_in = torch.cat([h_ego, mean_nei], dim=-1)  # [B, 2D]
+            elif self.neighbour_agg == "append":
+                # Flatten neighbours and concat (mask absent neighbours to zeros)
+                m = nbr_mask.to(dtype=H_nei.dtype).unsqueeze(-1)  # [B, K, 1]
+                H_nei_masked = H_nei * m  # [B, K, D]
+                head_in = torch.cat(
+                    [h_ego, H_nei_masked.reshape(H_nei.shape[0], -1)], dim=-1
+                )  # [B, D + K*D]
 
-        logits = self.policy_actor(h_ego)  # [B, A]
+        logits = self.policy_actor(head_in)  # [B, A]
 
         # Safe action masking to -inf with all-invalid fallback
         invalid = action_mask <= 0
@@ -258,7 +329,7 @@ class MaskedNeighbourGNN(TorchModelV2, nn.Module):
         if all_invalid.any():
             masked_logits[all_invalid] = logits[all_invalid]
 
-        self._value_out = self.value_critic(h_ego).squeeze(-1)  # [B]
+        self._value_out = self.value_critic(head_in).squeeze(-1)  # [B]
         return masked_logits, state
 
     def value_function(self):
