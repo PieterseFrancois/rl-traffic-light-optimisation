@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2025-09-25 12:20:43 by Eclipse SUMO sumo Version 1.21.0
+<!-- generated on 2025-11-03 19:22:19 by Eclipse SUMO sumo Version 1.21.0
 -->
 
 <sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -10,22 +10,24 @@
         <route-files value="ingolstadt21.rou.xml"/>
         <additional-files value="ingolstadt21.add.xml"/>
     </input>
-    <processing>
-		<threads value="1"/>
-        <max-depart-delay value="300"/>
-		<default.carfollowmodel value="Krauss"/>
-	</processing>
-	<routing>
-		<routing-algorithm value="dijkstra"/>
-		<device.rerouting.probability value="0.82"/>
-		<device.rerouting.period value="300" />
-		<device.rerouting.threads value="1"/>
-		<device.rerouting.synchronize value="true"/>
-	</routing>
 
     <time>
         <begin value="57600"/>
         <end value="61200"/>
     </time>
+
+    <processing>
+        <threads value="1"/>
+        <max-depart-delay value="300"/>
+        <default.carfollowmodel value="Krauss"/>
+    </processing>
+
+    <routing>
+        <routing-algorithm value="dijkstra"/>
+        <device.rerouting.probability value="0.82"/>
+        <device.rerouting.period value="300"/>
+        <device.rerouting.threads value="1"/>
+        <device.rerouting.synchronize value="true"/>
+    </routing>
 
 </sumoConfiguration>
