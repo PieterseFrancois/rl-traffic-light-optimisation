@@ -175,7 +175,7 @@ class SimControllerView(QWidget):
 
         # Right: live KPI overlay chart
         right = QVBoxLayout()
-        self._chart = LiveKpiPlot(max_points=4000)
+        self._chart = LiveKpiPlot(max_points=100000)
         right.addWidget(self._chart)
         split.addLayout(right, 2)
 
@@ -263,7 +263,7 @@ class SimControllerView(QWidget):
                     self, "Folder error", f"Cannot create output folder:\n{e}"
                 )
                 return
-        
+
         self._outdir = out_dir
 
         # Guard against concurrent runs
