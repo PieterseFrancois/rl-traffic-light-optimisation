@@ -130,9 +130,11 @@ class LiveKpiPlot(QWidget):
     def _merged_metric_df(self, metric_key: str) -> pd.DataFrame:
         df_b = self._df_phase(metric_key, "baseline")
         df_e = self._df_phase(metric_key, "eval")
-        df = pd.merge(df_b, df_e, on="t", how="outer").sort_values("t", kind="mergesort")
+        df = pd.merge(df_b, df_e, on="t", how="outer").sort_values(
+            "t", kind="mergesort"
+        )
         return df[["t", "baseline", "eval"]]
-    
+
     def save_all_metrics_csv(self, directory: str | Path) -> list[Path]:
         """
         Save one CSV per metric into 'directory', each with columns:

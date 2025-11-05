@@ -2,6 +2,7 @@ class FaultManager:
     """
     Manages multiple faults in the environment.
     """
+
     def __init__(self, faults):
         self.faults = faults
 

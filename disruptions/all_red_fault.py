@@ -1,5 +1,6 @@
 import traci
 
+
 class AllRedFault:
     def __init__(self, tls_id, duration_steps: int, start_step: int):
         self.tls_id = tls_id
@@ -17,7 +18,5 @@ class AllRedFault:
             self._all_red_program()
 
     def _all_red_program(self):
-        self.pattern_len = len(
-            traci.trafficlight.getRedYellowGreenState(self.tls_id)
-        )
+        self.pattern_len = len(traci.trafficlight.getRedYellowGreenState(self.tls_id))
         traci.trafficlight.setRedYellowGreenState(self.tls_id, "r" * self.pattern_len)
