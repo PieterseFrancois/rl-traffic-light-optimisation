@@ -341,6 +341,8 @@ class MultiTLSParallelEnv(ParallelEnv):
                 nogui=self.sumo_config.nogui if not probe_spaces else True,
                 seed=self.sumo_config.seed,
                 time_to_teleport=self.sumo_config.time_to_teleport,
+                scale=self.sumo_config.scale,
+                ignore_junction_blocker_s=self.sumo_config.ignore_junction_blocker_s,
             )
             start_sumo(
                 logging_config,
@@ -376,6 +378,8 @@ class MultiTLSParallelEnv(ParallelEnv):
                 nogui=self.sumo_config.nogui if not probe_spaces else True,
                 seed=use_seed,
                 time_to_teleport=self.sumo_config.time_to_teleport,
+                scale=self.sumo_config.scale,
+                ignore_junction_blocker_s=self.sumo_config.ignore_junction_blocker_s,
             )
             start_sumo(training_config)
 
