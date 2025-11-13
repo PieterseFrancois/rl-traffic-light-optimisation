@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
 
 from gui.app_shell import MainWindow
 from gui.views.scenario_manager import ScenarioManagerView
@@ -38,6 +39,10 @@ def build_app():
             {"path": "training.early_stopping_patience", "component": "pos_int"},
             {"path": "training.minimum_improvement", "component": "pos_float"},
             {"path": "training.moving_window_size", "component": "pos_int"},
+            {"path": "all_red_fault.enabled", "component": "bool"},
+            {"path": "all_red_fault.tls_id", "component": "str"},
+            {"path": "all_red_fault.duration_s", "component": "pos_int"},
+            {"path": "all_red_fault.start_time_s", "component": "pos_int"},
         ],
     )
     results_view = ResultsView(default_video_dir=".video-repository")
@@ -98,6 +103,9 @@ STYLESHEETS = [
 
 if __name__ == "__main__":
     app = build_app()
+    icon = QIcon("assets/logo/logov2.ico")
+    app.setWindowIcon(icon)
+
     qss = load_stylesheets(STYLESHEETS)
     if qss:
         app.setStyleSheet(qss)

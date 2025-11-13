@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QListWidgetItem,
 )
+from PySide6.QtGui import QIcon
 
 
 class MainWindow(QMainWindow):
@@ -17,6 +18,9 @@ class MainWindow(QMainWindow):
         home_view: QWidget,
     ):
         super().__init__()
+        icon = QIcon("assets/logo/logov2.ico")
+        # If you have a QMainWindow or QWidget as the main window:
+        self.setWindowIcon(icon)
         self.setWindowTitle("Multi Agent RL Control Center")
         self._stack = QStackedWidget()
         self._pages = {
