@@ -128,11 +128,16 @@ def sumo_baseline_configured_tls(
         # Advance simulation without issuing any actions (SUMO follows its own TLS program)
         for _ in range(max(1, int(ticks_per_decision))):
             traci.simulationStep()
-            if fault_manager is not None and t_now <= all_red_fault_start_time_s + all_red_fault_duration_s:
+            if (
+                fault_manager is not None
+                and t_now <= all_red_fault_start_time_s + all_red_fault_duration_s
+            ):
                 fault_manager.step(t_now)
             elif fault_manager is not None and not restored:
                 # Restore cached programs if no fault is active
-                traci.trafficlight.setProgram(all_red_fault_tls_id, cache_active_tls_program)
+                traci.trafficlight.setProgram(
+                    all_red_fault_tls_id, cache_active_tls_program
+                )
                 restored = True
 
             for agent in agents.values():
