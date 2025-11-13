@@ -1,5 +1,6 @@
 import random
 import traci
+import yaml
 import numpy as np
 from torch import Tensor
 
@@ -95,10 +96,40 @@ class MultiTLSParallelEnv(ParallelEnv):
         self._reset_count = 0
 
         # Fault manager
-        ALL_RED_FAULT: bool = False
+        CONFIG_FILE_PATH: str = "environments/ingolstadt/config.yaml"
+        with open(CONFIG_FILE_PATH, "r") as f:
+            config_yaml = yaml.safe_load(f)
+
+        all_red_fault: bool = config_yaml.get("all_red_fault", {}).get("enabled", False)
+        all_red_fault_tls_id: str | None = config_yaml.get("all_red_fault", {}).get(
+            "tls_id", None
+        )
+        all_red_fault_duration_s: int | None = config_yaml.get("all_red_fault", {}).get(
+            "duration_s", None
+        )
+        all_red_fault_start_time_s: int | None = config_yaml.get(
+            "all_red_fault", {}
+        ).get("start_time_s", None)
+
+        if all_red_fault:
+            if (
+                all_red_fault_tls_id is None
+                or all_red_fault_duration_s is None
+                or all_red_fault_start_time_s is None
+            ):
+                raise ValueError(
+                    "All-Red fault configuration is incomplete in config.yaml"
+                )
+
         faults = []
-        if ALL_RED_FAULT:
-            faults.append(AllRedFault("tlN7", duration_steps=600, start_step=58200))
+        if all_red_fault:
+            faults.append(
+                AllRedFault(
+                    tls_id=all_red_fault_tls_id,
+                    duration_steps=all_red_fault_duration_s,
+                    start_step=all_red_fault_start_time_s,
+                )
+            )
 
         self.fault_manager = FaultManager(faults)
 

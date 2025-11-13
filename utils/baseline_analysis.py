@@ -1,4 +1,5 @@
 import traci
+import yaml
 
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from utils.sumo_helpers import start_sumo, close_sumo, SUMOConfig, NetworkStateL
 
 from event_bus import EventBus
 from utils.kpi import collect_and_emit_kpis, RunMode
+
+from disruptions.fault_manager import FaultManager
+from disruptions.all_red_fault import AllRedFault
 
 
 def sumo_baseline_configured_tls(
@@ -45,6 +49,42 @@ def sumo_baseline_configured_tls(
     Returns:
         dict[tls_id -> list[LogEntry]]
     """
+    # Configure faults
+    CONFIG_FILE_PATH: str = "environments/ingolstadt/config.yaml"
+    with open(CONFIG_FILE_PATH, "r") as f:
+        config_yaml = yaml.safe_load(f)
+
+    all_red_fault: bool = config_yaml.get("all_red_fault", {}).get("enabled", False)
+    all_red_fault_tls_id: str | None = config_yaml.get("all_red_fault", {}).get(
+        "tls_id", None
+    )
+    all_red_fault_duration_s: int | None = config_yaml.get("all_red_fault", {}).get(
+        "duration_s", None
+    )
+    all_red_fault_start_time_s: int | None = config_yaml.get("all_red_fault", {}).get(
+        "start_time_s", None
+    )
+
+    if all_red_fault:
+        if (
+            all_red_fault_tls_id is None
+            or all_red_fault_duration_s is None
+            or all_red_fault_start_time_s is None
+        ):
+            raise ValueError("All-Red fault configuration is incomplete in config.yaml")
+
+    faults = []
+    if all_red_fault:
+        faults.append(
+            AllRedFault(
+                tls_id=all_red_fault_tls_id,
+                duration_steps=all_red_fault_duration_s,
+                start_step=all_red_fault_start_time_s,
+            )
+        )
+
+    fault_manager = FaultManager(faults) if faults else None
+
     # (Re)start SUMO
     close_sumo()
     start_sumo(
@@ -78,6 +118,9 @@ def sumo_baseline_configured_tls(
     t0 = float(traci.simulation.getTime())
     t_end = t0 + float(simulation_duration)
 
+    cache_active_tls_program = traci.trafficlight.getProgram(all_red_fault_tls_id)
+    restored = False
+
     t_now = t0
     while t_now < t_end and traci.simulation.getMinExpectedNumber() > 0:
         t_now = float(traci.simulation.getTime())
@@ -85,6 +128,13 @@ def sumo_baseline_configured_tls(
         # Advance simulation without issuing any actions (SUMO follows its own TLS program)
         for _ in range(max(1, int(ticks_per_decision))):
             traci.simulationStep()
+            if fault_manager is not None and t_now <= all_red_fault_start_time_s + all_red_fault_duration_s:
+                fault_manager.step(t_now)
+            elif fault_manager is not None and not restored:
+                # Restore cached programs if no fault is active
+                traci.trafficlight.setProgram(all_red_fault_tls_id, cache_active_tls_program)
+                restored = True
+
             for agent in agents.values():
                 agent.tick()
 
