@@ -78,7 +78,7 @@ class SimControllerView(QWidget):
         self._mode.setObjectName("simRunModeCombo")
         self._mode.addItem(RunMode.TRAIN_EVAL.value, RunMode.TRAIN_EVAL)
         self._mode.addItem(RunMode.EVAL_ONLY.value, RunMode.EVAL_ONLY)
-        self._mode.addItem(RunMode.BATCH_EVAL_ONLY.value, RunMode.BATCH_EVAL_ONLY)
+        # self._mode.addItem(RunMode.BATCH_EVAL_ONLY.value, RunMode.BATCH_EVAL_ONLY)
         self._already_chk = QCheckBox("Already evaluated")
         self._already_chk.setProperty("role", "boolParam")
 
