@@ -448,7 +448,10 @@ class SimControllerView(QWidget):
         self._tearing_down = False
 
     def _on_sim_done(self, msg: str | None):
+        self.sig_log_line.emit("[info] Saving metrics...")
         self._chart.save_all_metrics_csv(Path(self._outdir) / "tracked_metrics")
+        self.sig_log_line.emit("[info] Saving network plots...")
+        self._chart.save_all_metric_plots(Path(self._outdir) / "plots")
         self.sig_log_line.emit(f"[done] {msg or 'Simulation finished.'}")
         self._teardown_run(clean=True)
 

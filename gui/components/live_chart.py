@@ -149,3 +149,43 @@ class LiveKpiPlot(QWidget):
             self._merged_metric_df(key).to_csv(p, index=False)
             written.append(p)
         return written
+
+    def _draw_metric_now(self, metric_key: str):
+        """Render the given metric to the shared figure immediately."""
+        b = self._buffer["baseline"][metric_key]
+        e = self._buffer["eval"][metric_key]
+        self._line_baseline.set_data(b["t"], b["y"])
+        self._line_eval.set_data(e["t"], e["y"])
+
+        # Axes labels
+        self.ax.set_xlabel("Simulation Time (s)")
+        self.ax.set_ylabel(next(label for k, label in self._metrics if k == metric_key))
+
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.fig.tight_layout()
+        self.canvas.draw()
+
+    def save_all_metric_plots(
+        self,
+        directory: str | Path,
+        fmt: str = "png",
+        dpi: int = 300,
+        transparent: bool = False,
+    ) -> list[Path]:
+        """Save one image per metric."""
+        out_dir = Path(directory)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        written: list[Path] = []
+        orig_key = self._cur_key
+        try:
+            for key, _ in self._metrics:
+                fp = out_dir / f"{key}.{fmt}"
+                self._draw_metric_now(key)
+                self.fig.savefig(fp, format=fmt, dpi=dpi, transparent=transparent)
+                written.append(fp)
+        finally:
+            # Restore the UI-selected metric
+            if self._cur_key != orig_key:
+                self._draw_metric_now(orig_key)
+        return written
